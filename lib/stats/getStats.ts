@@ -1,0 +1,28 @@
+import { getTournament } from "./api.ts";
+import { TournamentData } from "../../types/tournament.ts";
+import { aggregateStats } from "./utils.ts";
+import { TournamentStats } from "../../types/stats.ts";
+import { getTournamentStats } from "./statsGen.ts";
+
+const tournamentDatas: TournamentData[] = [
+    {tournamentId: 103484, division: 'MA3'}
+];
+
+const PDGA_NUM = 268260;
+
+export async function getStats() {
+    const fullStats: TournamentStats[] = [];
+
+    for (const tournamentData of tournamentDatas) {
+        const tournament = await getTournament(tournamentData.tournamentId, tournamentData.division, 1);
+        const tournamentName = tournament.data.layouts[0]?.Name;
+        const roundStats = await getTournamentStats(tournamentData.tournamentId, tournamentData.division, PDGA_NUM);
+
+        fullStats.push({
+            tournamentName,
+            stats: aggregateStats(roundStats)
+        });
+    }
+
+    return fullStats;
+}
