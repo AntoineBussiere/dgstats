@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Player } from "../../types/player";
 import PlayerSelection from "./PlayerSelection";
 import { CompetitionData } from "../../types/competition";
@@ -8,7 +8,6 @@ import Competitions from "./Competitions";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import Period from "./Period";
 import Statistics from "./Statistics";
-import { getPlayers } from "../../lib/player";
 
 const initialCompetitions: CompetitionData[] = [
     {
@@ -31,29 +30,15 @@ const initialCompetitions: CompetitionData[] = [
     },
 ];
 
-export default function StatsPage() {
+export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
     const [competitions, setCompetitions] = useState<CompetitionData[]>(initialCompetitions);
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
-    const [players, setPlayers] = useState<Player[]>([]);
-    const [selectedPlayer, setSelectedPlayer] = useState<Player>(null);
+    const [players, setPlayers] = useState<Player[]>(initialPlayers);
+    const [selectedPlayer, setSelectedPlayer] = useState<Player>(initialPlayers[0]);
 
     const availableYears = [
         ...new Set(competitions.map((competition) => competition.date.getFullYear())),
     ].sort((a, b) => b - a);
-
-    useEffect(() => {
-        async function loadPlayers() {
-            const players = await getPlayers();
-
-            setPlayers(players);
-
-            if (players.length > 0) {
-                setSelectedPlayer(players[0]);
-            }
-        }
-
-        loadPlayers();
-    }, []);
 
     return (
         <main className="min-h-screen bg-slate-950 text-slate-100">

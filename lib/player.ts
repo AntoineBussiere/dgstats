@@ -1,3 +1,5 @@
+"use server";
+
 import { Player } from "../types/player";
 import { redisSuffix } from "./env";
 import { redis } from "./redis";
@@ -8,5 +10,5 @@ export async function getPlayers() {
 }
 
 export async function setPlayers(players: Player[]) {
-    redis.set('DGSTATS-player' + redisSuffix, players);
+    await redis.set('DGSTATS-player' + redisSuffix, players);
 }

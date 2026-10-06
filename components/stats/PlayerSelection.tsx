@@ -38,15 +38,13 @@ export default function PlayerSelection({players, selectedPlayer, onSelectedPlay
         } catch (e) {
             console.error(e);
         }
-
-
     }
 
     function resetForm() {
         setShowAddPlayer(false);
         setNewPlayerFirstname("");
         setNewPlayerLastname("");
-        setNewPlayerPDGANumber(null);
+        setNewPlayerPDGANumber("");
     }
 
     return (
