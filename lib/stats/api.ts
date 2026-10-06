@@ -1,4 +1,4 @@
-import { Tournament } from "../../types/tournament.ts";
+import { Competition } from "../../types/competition.ts";
 import { HoleStats, Stats } from "../../types/stats.ts";
 
 
@@ -14,7 +14,7 @@ function getHoleStatsURL(scoreId: number): string {
     return `https://www.pdga.com/api/v1/feat/live-scores/${scoreId}/throw-timelines`;
 }
 
-export async function getTournament(tournamentId: number, division: string, round: number): Promise<Tournament> {
+export async function getTournament(tournamentId: number, division: string, round: number): Promise<Competition> {
     const response = await fetch(
         getTournamentURL(tournamentId, division, round)
     );
@@ -23,7 +23,7 @@ export async function getTournament(tournamentId: number, division: string, roun
         throw new Error(`HTTP error ${response.status}`);
     }
 
-    const tournament: Tournament = await response.json();
+    const tournament: Competition = await response.json();
     return tournament;
 }
 

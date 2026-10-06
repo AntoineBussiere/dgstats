@@ -1,4 +1,4 @@
-export interface Tournament {
+export interface Competition {
     data: {
         scores: Array<Score>;
         layouts: Array<{Name: string}>
@@ -15,7 +15,9 @@ interface Score {
     Scores: string;
 }
 
-export interface TournamentData {
-    tournamentId: number;
+export interface CompetitionData {
+    competitionId: number;
     division: string;
+    name?: string;
+    date?: Date;
 }
