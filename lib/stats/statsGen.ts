@@ -1,4 +1,4 @@
-import { getAPIHoleStats, getAPIStats, getTournament } from "./api.ts";
+import { getAPIHoleStats, getAPIStats, getCompetition } from "./api.ts";
 import { BetterStats, HoleStats, Stats } from "../../types/stats.ts";
 
 function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats): BetterStats {
@@ -104,10 +104,10 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats): B
     }
 }
 
-export async function getRoundStats(tournamentId: number, division: string, round: number, PDGANum: number): Promise<BetterStats | null> {
-    const tournament = await getTournament(tournamentId, division, round);
+export async function getRoundStats(competitionId: number, division: string, round: number, PDGANum: number): Promise<BetterStats | null> {
+    const competition = await getCompetition(competitionId, division, round);
 
-    const score = tournament.data.scores.find(
+    const score = competition.data.scores.find(
         x => x.PDGANum === PDGANum
     );
 
@@ -126,15 +126,15 @@ export async function getRoundStats(tournamentId: number, division: string, roun
     return genStats(stats, score.Scores, score.Pars, holeStats);
 }
 
-export async function getTournamentStats(tournamentId: number, division: string, playerId: number): Promise<BetterStats[]> {
-    const firstRound = await getTournament(tournamentId, division, 1);
+export async function getCompetitionStats(competitionId: number, division: string, playerId: number): Promise<BetterStats[]> {
+    const firstRound = await getCompetition(competitionId, division, 1);
 
     const nbRounds = firstRound.data.scores[0]?.Rounds.split(",").filter(value => value !== "").map(Number).length ?? 0;
 
     const roundStats: BetterStats[] = [];
 
     for (let round = 1; round <= nbRounds; round++) {
-        const stats = await getRoundStats(tournamentId, division, round, playerId);
+        const stats = await getRoundStats(competitionId, division, round, playerId);
 
         if (stats) {
             roundStats.push(stats);

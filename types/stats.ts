@@ -51,7 +51,8 @@ export interface BetterStats {
     nbDBoggiePlus: number;
 }
 
-export interface TournamentStats {
-    tournamentName: string | undefined;
+export interface CompetitionStats {
+    competitionName: string;
+    competitionDate: Date;
     stats: BetterStats;
 }

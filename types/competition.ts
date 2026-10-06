@@ -1,7 +1,14 @@
-export interface Competition {
+export interface CompetitionDTO {
     data: {
         scores: Array<Score>;
         layouts: Array<{Name: string}>
+    }
+}
+
+export interface CompetitionDataDTO {
+    data: {
+        EndDate: string;
+        SimpleName: string;
     }
 }
 

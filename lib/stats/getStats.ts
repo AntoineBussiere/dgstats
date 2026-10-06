@@ -1,25 +1,19 @@
-import { getTournament } from "./api.ts";
+import { getCompetitionData } from "./api.ts";
 import { CompetitionData } from "../../types/competition.ts";
 import { aggregateStats } from "./utils.ts";
-import { TournamentStats } from "../../types/stats.ts";
-import { getTournamentStats } from "./statsGen.ts";
+import { CompetitionStats } from "../../types/stats.ts";
+import { getCompetitionStats } from "./statsGen.ts";
 
-const tournamentDatas: CompetitionData[] = [
-    {competitionId: 103484, division: 'MA3'}
-];
+export async function getStats(PDGANum: number, competitionDatas: CompetitionData[]) {
+    const fullStats: CompetitionStats[] = [];
 
-const PDGA_NUM = 268260;
-
-export async function getStats() {
-    const fullStats: TournamentStats[] = [];
-
-    for (const tournamentData of tournamentDatas) {
-        const tournament = await getTournament(tournamentData.competitionId, tournamentData.division, 1);
-        const tournamentName = tournament.data.layouts[0]?.Name;
-        const roundStats = await getTournamentStats(tournamentData.competitionId, tournamentData.division, PDGA_NUM);
+    for (const competitionData of competitionDatas) {
+        const competition = await getCompetitionData(competitionData.competitionId);
+        const roundStats = await getCompetitionStats(competitionData.competitionId, competitionData.division, PDGANum);
 
         fullStats.push({
-            tournamentName,
+            competitionName: competition.data.SimpleName,
+            competitionDate: new Date(competition.data.EndDate),
             stats: aggregateStats(roundStats)
         });
     }
