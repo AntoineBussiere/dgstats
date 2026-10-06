@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Player } from "../../types/player";
 import PlayerSelection from "./PlayerSelection";
 import { CompetitionData } from "../../types/competition";
@@ -8,20 +8,7 @@ import Competitions from "./Competitions";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import Period from "./Period";
 import Statistics from "./Statistics";
-
-
-const players: Array<Player> = [
-    {
-        firstname: "Antoine",
-        lastname: "Bussière",
-        pdgaNumber: 268260,
-    },
-    {
-        firstname: "Jean",
-        lastname: "Dupond",
-        pdgaNumber: 654321,
-    },
-];
+import { getPlayers } from "../../lib/player";
 
 const initialCompetitions: CompetitionData[] = [
     {
@@ -45,16 +32,28 @@ const initialCompetitions: CompetitionData[] = [
 ];
 
 export default function StatsPage() {
-
     const [competitions, setCompetitions] = useState<CompetitionData[]>(initialCompetitions);
-
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
-
-    const [selectedPlayer, setSelectedPlayer] = useState<Player>(players[0]);
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [selectedPlayer, setSelectedPlayer] = useState<Player>(null);
 
     const availableYears = [
         ...new Set(competitions.map((competition) => competition.date.getFullYear())),
     ].sort((a, b) => b - a);
+
+    useEffect(() => {
+        async function loadPlayers() {
+            const players = await getPlayers();
+
+            setPlayers(players);
+
+            if (players.length > 0) {
+                setSelectedPlayer(players[0]);
+            }
+        }
+
+        loadPlayers();
+    }, []);
 
     return (
         <main className="min-h-screen bg-slate-950 text-slate-100">
@@ -77,11 +76,22 @@ export default function StatsPage() {
                     players={players}
                     selectedPlayer={selectedPlayer}
                     onSelectedPlayer={(player: Player) => setSelectedPlayer(player)}
+                    onAddPlayer={(newPlayer: Player) => {
+                        setPlayers((current) => [
+                            ...current,
+                            newPlayer
+                        ]);
+                        setSelectedPlayer(newPlayer);
+                    }}
                 ></PlayerSelection>
 
                 <Competitions
-                    initialCompetitions={initialCompetitions}
-                    onAddCompetitions={(competitions: CompetitionData[]) => setCompetitions(competitions)}
+                    competitions={competitions}
+                    onAddCompetition={(newCompetition: CompetitionData) => setCompetitions((current) => [
+                        ...current,
+                        newCompetition,
+                    ])}
+                    onDeleteCompetition={(competitionId: number) => setCompetitions((current) => current.filter((item) => item.competitionId !== competitionId))}
                 ></Competitions>
 
                 <Period

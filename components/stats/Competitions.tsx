@@ -2,16 +2,16 @@ import { useState } from "react";
 import { CompetitionData } from "../../types/competition";
 
 type Props = {
-    initialCompetitions: CompetitionData[],
-    onAddCompetitions: (competitions: CompetitionData[]) => void
+    competitions: CompetitionData[],
+    onAddCompetition: (competition: CompetitionData) => void
+    onDeleteCompetition: (competitionId: number) => void
 }
 
-export default function Competitions({initialCompetitions}: Props) {
+export default function Competitions({competitions, onAddCompetition, onDeleteCompetition}: Props) {
     const [showAddCompetition, setShowAddCompetition] = useState(false);
     const [newCompetitionName, setNewCompetitionName] = useState("");
     const [newCompetitionUrl, setNewCompetitionUrl] = useState("");
-    const [competitions, setCompetitions] = useState<CompetitionData[]>(initialCompetitions);
-    const [selectedCompetition, setSelectedCompetition] = useState(initialCompetitions[0]?.competitionId ?? "");
+    const [selectedCompetition, setSelectedCompetition] = useState(competitions[0]?.competitionId ?? "");
     
     
     function handleAddCompetition() {
@@ -25,10 +25,7 @@ export default function Competitions({initialCompetitions}: Props) {
             division: ''
         };
 
-        setCompetitions((current) => [
-            ...current,
-            newCompetition,
-        ]);
+        onAddCompetition(newCompetition);
 
         // setSelectedCompetition(newCompetition.competitionId);
 
@@ -37,9 +34,9 @@ export default function Competitions({initialCompetitions}: Props) {
         setShowAddCompetition(false);
     }
 
-    function handleDeleteCompetition(id: number) {
+    function handleDeleteCompetition(competitionId: number) {
         const competition = competitions.find(
-            (item) => item.competitionId === id,
+            (item) => item.competitionId === competitionId,
         );
 
         if (!competition) {
@@ -54,9 +51,7 @@ export default function Competitions({initialCompetitions}: Props) {
             return;
         }
 
-        setCompetitions((current) =>
-            current.filter((item) => item.competitionId !== id),
-        );
+        onDeleteCompetition(competitionId);
 
         // if (selectedCompetition === id) {
         //     const remainingCompetition = competitions.find(
@@ -88,11 +83,7 @@ export default function Competitions({initialCompetitions}: Props) {
 
                 <button
                     type="button"
-                    onClick={() =>
-                        setShowAddCompetition(
-                            (current) => !current,
-                        )
-                    }
+                    onClick={ () => setShowAddCompetition((current) => !current) }
                     className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 text-sm font-medium text-slate-200 transition hover:bg-slate-700"
                 >
                     <span className="text-lg leading-none">
@@ -119,11 +110,7 @@ export default function Competitions({initialCompetitions}: Props) {
                                 id="competition-name"
                                 type="text"
                                 value={newCompetitionName}
-                                onChange={(event) =>
-                                    setNewCompetitionName(
-                                        event.target.value,
-                                    )
-                                }
+                                onChange={ (event) => setNewCompetitionName(event.target.value) }
                                 placeholder="French Open 2026"
                                 className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-indigo-500"
                             />
@@ -141,11 +128,7 @@ export default function Competitions({initialCompetitions}: Props) {
                                 id="competition-url"
                                 type="url"
                                 value={newCompetitionUrl}
-                                onChange={(event) =>
-                                    setNewCompetitionUrl(
-                                        event.target.value,
-                                    )
-                                }
+                                onChange={ (event) => setNewCompetitionUrl(event.target.value) }
                                 placeholder="https://..."
                                 className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-indigo-500"
                             />
