@@ -1,7 +1,7 @@
 import { BetterStats } from "../../types/stats.ts";
 
 export function aggregateStats(stats: Array<BetterStats>): BetterStats {
-    return stats.reduce(
+    const result = stats.reduce(
         (acc, obj) => ({
             c1xsuccess: acc.c1xsuccess + obj.c1xsuccess,
             c1xtotal: acc.c1xtotal + obj.c1xtotal,
@@ -22,6 +22,9 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
             nbPar: acc.nbPar + obj.nbPar,
             nbBoggie: acc.nbBoggie + obj.nbBoggie,
             nbDBoggiePlus: acc.nbDBoggiePlus + obj.nbDBoggiePlus,
+            rating: obj.rating,
+            roundRatingSum: acc.roundRatingSum + obj.roundRating,
+            roundRatingCount: acc.roundRatingCount + 1
         }),
         {
             c1xsuccess: 0,
@@ -43,6 +46,15 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
             nbPar: 0,
             nbBoggie: 0,
             nbDBoggiePlus: 0,
+            rating: 0,
+            roundRatingSum: 0,
+            roundRatingCount: 0
         }
     );
+
+    const averageRoundRating = result.roundRatingCount > 0 ? result.roundRatingSum / result.roundRatingCount : 0;
+    return {
+        ...result,
+        roundRating: averageRoundRating
+    };
 }
