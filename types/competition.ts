@@ -13,13 +13,14 @@ export interface CompetitionDataDTO {
 }
 
 interface Score {
-    HoleScores: Array<string>;
     ScoreID: number;
     PDGANum: number;
     Rounds: string;
     Holes: number;
     Pars: string;
     Scores: string;
+    Rating: number;
+    RoundRating: number;
 }
 
 export interface CompetitionData {

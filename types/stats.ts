@@ -49,6 +49,8 @@ export interface BetterStats {
     nbPar: number;
     nbBoggie: number;
     nbDBoggiePlus: number;
+    rating: number;
+    roundRating: number;
 }
 
 export interface CompetitionStats {

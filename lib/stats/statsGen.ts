@@ -1,7 +1,7 @@
 import { getAPIHoleStats, getAPIStats, getCompetition } from "./api.ts";
 import { BetterStats, HoleStats, Stats } from "../../types/stats.ts";
 
-function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats): BetterStats {
+function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, rating: number, roundRating: number): BetterStats {
     const score = s.split(",").filter(value => value !== "").map(Number);
     const par = p.split(",").filter(value => value !== "").slice(0, score.length).map(Number);
 
@@ -100,7 +100,9 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats): B
         nbBirdie,
         nbPar,
         nbBoggie,
-        nbDBoggiePlus
+        nbDBoggiePlus,
+        rating,
+        roundRating
     }
 }
 
@@ -123,7 +125,7 @@ export async function getRoundStats(competitionId: number, division: string, rou
 
     const holeStats = await getAPIHoleStats(score.ScoreID);
 
-    return genStats(stats, score.Scores, score.Pars, holeStats);
+    return genStats(stats, score.Scores, score.Pars, holeStats, score.Rating, score.RoundRating);
 }
 
 export async function getCompetitionStats(competitionId: number, division: string, playerId: number): Promise<BetterStats[]> {
