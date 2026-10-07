@@ -1,5 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import { CompetitionData } from "../../types/competition";
+import { getCompetitionData } from "../../lib/stats/api";
 
 type Props = {
     competitions: CompetitionData[],
@@ -9,61 +12,41 @@ type Props = {
 
 export default function Competitions({competitions, onAddCompetition, onDeleteCompetition}: Props) {
     const [showAddCompetition, setShowAddCompetition] = useState(false);
-    const [newCompetitionName, setNewCompetitionName] = useState("");
     const [newCompetitionUrl, setNewCompetitionUrl] = useState("");
-    const [selectedCompetition, setSelectedCompetition] = useState(competitions[0]?.competitionId ?? "");
     
-    
-    function handleAddCompetition() {
-        if (!newCompetitionName.trim() || !newCompetitionUrl.trim()) {
+    async function handleAddCompetition() {
+        if (!newCompetitionUrl.trim()) {
             return;
         }
 
+        const splittedUrl = newCompetitionUrl.split('/');
+        const idDivision = splittedUrl[splittedUrl.length - 1].split('#');
+
+        const competitionData = await getCompetitionData(Number(idDivision[0]));
+
         const newCompetition: CompetitionData = {
-            competitionId: 1,
-            name: '',
-            division: ''
+            competitionId: Number(idDivision[0]),
+            name: competitionData.data.SimpleName,
+            division: idDivision[1],
+            date: competitionData.data.EndDate
         };
+        console.log(newCompetition);
+        
 
         onAddCompetition(newCompetition);
 
-        // setSelectedCompetition(newCompetition.competitionId);
-
-        setNewCompetitionName("");
         setNewCompetitionUrl("");
         setShowAddCompetition(false);
     }
 
-    function handleDeleteCompetition(competitionId: number) {
-        const competition = competitions.find(
-            (item) => item.competitionId === competitionId,
-        );
-
-        if (!competition) {
-            return;
-        }
-
+    function handleDeleteCompetition(competition: CompetitionData) {
         const confirmed = window.confirm(
             `Supprimer la compétition "${competition.name}" ?`,
         );
 
-        if (!confirmed) {
-            return;
+        if (confirmed) {
+            onDeleteCompetition(competition.competitionId);
         }
-
-        onDeleteCompetition(competitionId);
-
-        // if (selectedCompetition === id) {
-        //     const remainingCompetition = competitions.find(
-        //         (item) => item.id !== id,
-        //     );
-
-        //     setSelectedCompetition(
-        //         remainingCompetition?.id ?? "",
-        //     );
-
-        //     setPeriodType("global");
-        // }
     }
 
 
@@ -97,25 +80,7 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
             {/* Add competition form */}
             {showAddCompetition && (
                 <div className="mb-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
-                    <div className="grid gap-4 md:grid-cols-[1fr_2fr_auto] md:items-end">
-                        <div>
-                            <label
-                                htmlFor="competition-name"
-                                className="mb-2 block text-sm font-medium text-slate-300"
-                            >
-                                Nom
-                            </label>
-
-                            <input
-                                id="competition-name"
-                                type="text"
-                                value={newCompetitionName}
-                                onChange={ (event) => setNewCompetitionName(event.target.value) }
-                                placeholder="French Open 2026"
-                                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-indigo-500"
-                            />
-                        </div>
-
+                    <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
                         <div>
                             <label
                                 htmlFor="competition-url"
@@ -128,8 +93,9 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                                 id="competition-url"
                                 type="url"
                                 value={newCompetitionUrl}
+                                autoComplete="off"
                                 onChange={ (event) => setNewCompetitionUrl(event.target.value) }
-                                placeholder="https://..."
+                                placeholder="https://www.pdga.com/tour/event/103484#MA3"
                                 className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-indigo-500"
                             />
                         </div>
@@ -139,7 +105,6 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                                 type="button"
                                 onClick={() => {
                                     setShowAddCompetition(false);
-                                    setNewCompetitionName("");
                                     setNewCompetitionUrl("");
                                 }}
                                 className="rounded-xl px-4 py-2.5 text-sm text-slate-400 transition hover:bg-slate-800 hover:text-slate-200"
@@ -151,7 +116,6 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                                 type="button"
                                 onClick={handleAddCompetition}
                                 disabled={
-                                    !newCompetitionName.trim() ||
                                     !newCompetitionUrl.trim()
                                 }
                                 className="rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
@@ -164,15 +128,15 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
             )}
 
             {/* Competition list */}
-            {competitions.length > 0 && (
+            {competitions?.length > 0 && (
                 <div className="space-y-2">
                     {Object.entries(
                         competitions.reduce<Record<number, CompetitionData[]>>((groups, competition) => {
-                            if (!groups[competition.date.getFullYear()]) {
-                                groups[competition.date.getFullYear()] = [];
+                            if (!groups[(new Date(competition.date)).getFullYear()]) {
+                                groups[(new Date(competition.date)).getFullYear()] = [];
                             }
 
-                            groups[competition.date.getFullYear()].push(competition);
+                            groups[(new Date(competition.date)).getFullYear()].push(competition);
 
                             return groups;
                         }, {})
@@ -205,20 +169,17 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                                             key={competition.competitionId}
                                             className="flex items-center justify-between px-4 py-3 hover:bg-slate-800/40"
                                         >
-                                            <button
-                                                onClick={() => setSelectedCompetition(competition.competitionId) }
+                                            <div
+                                                
                                                 className="min-w-0 flex-1 text-left"
                                             >
                                                 <div className="truncate text-sm text-slate-200">
                                                     {competition.name}
                                                 </div>
-                                                <div className="text-xs text-slate-500">
-                                                    {competition.date.getFullYear()}
-                                                </div>
-                                            </button>
+                                            </div>
 
                                             <button
-                                                onClick={() => handleDeleteCompetition(competition.competitionId)}
+                                                onClick={() => handleDeleteCompetition(competition)}
                                                 className="ml-3 rounded-md px-2 py-1 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
                                                 title="Supprimer"
                                             >
@@ -232,7 +193,7 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                 </div>
             )}
 
-            {competitions.length === 0 && (
+            {(!competitions || competitions.length === 0) && (
                 <div className="rounded-xl border border-dashed border-slate-800 px-4 py-8 text-center">
                     <p className="text-sm text-slate-400">
                         Aucune compétition enregistrée

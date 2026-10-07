@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Player } from "../../types/player";
 import PlayerSelection from "./PlayerSelection";
 import { CompetitionData } from "../../types/competition";
@@ -8,37 +8,65 @@ import Competitions from "./Competitions";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import Period from "./Period";
 import Statistics from "./Statistics";
-
-const initialCompetitions: CompetitionData[] = [
-    {
-        competitionId: 1,
-        name: "BDO 2026",
-        date: new Date('10/10/2026'),
-        division: 'MA3',
-    },
-    {
-        competitionId: 2,
-        name: "Tract'Open 2026",
-        date: new Date('09/09/2026'),
-        division: "MPO",
-    },
-    {
-        competitionId: 3,
-        name: "Tract'Open 2025",
-        date: new Date('10/10/2025'),
-        division: "MA1",
-    },
-];
+import { setDBPlayers } from "../../lib/player";
 
 export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
-    const [competitions, setCompetitions] = useState<CompetitionData[]>(initialCompetitions);
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const [selectedPlayer, setSelectedPlayer] = useState<Player>(initialPlayers[0]);
 
-    const availableYears = [
-        ...new Set(competitions.map((competition) => competition.date.getFullYear())),
-    ].sort((a, b) => b - a);
+    const availableYears = useMemo(
+        () => [
+            ...new Set(selectedPlayer.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
+        ].sort((a, b) => b - a), [selectedPlayer.competitions]
+    );
+
+    async function addCompetition(newCompetition: CompetitionData) {
+        const updatedPlayers = players.map((player) =>
+            player.pdgaNumber === selectedPlayer.pdgaNumber
+                ? {
+                    ...player,
+                    competitions: [...player.competitions, newCompetition]
+                }
+                : player
+        );
+        setPlayers(updatedPlayers);
+
+        setSelectedPlayer((currentPlayer) => {
+            return {
+                ...currentPlayer,
+                competitions: [...currentPlayer.competitions, newCompetition]
+            }
+        });
+
+        try {
+            await setDBPlayers(updatedPlayers);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function deleteCompetition(competitionId: number) {
+        const updatedPlayer = {
+            ...selectedPlayer,
+            competitions: selectedPlayer.competitions.filter(
+                (competition) => competition.competitionId !== competitionId
+            ),
+        };
+
+        const updatedPlayers = players.map((p) =>
+            p.pdgaNumber === updatedPlayer.pdgaNumber ? updatedPlayer : p
+        );
+
+        setPlayers(updatedPlayers);
+        setSelectedPlayer(updatedPlayer);
+        
+        try {
+            await setDBPlayers(updatedPlayers);
+        } catch (e) {
+            console.error(e);
+        }
+    }
 
     return (
         <main className="min-h-screen bg-slate-950 text-slate-100">
@@ -71,17 +99,14 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                 ></PlayerSelection>
 
                 <Competitions
-                    competitions={competitions}
-                    onAddCompetition={(newCompetition: CompetitionData) => setCompetitions((current) => [
-                        ...current,
-                        newCompetition,
-                    ])}
-                    onDeleteCompetition={(competitionId: number) => setCompetitions((current) => current.filter((item) => item.competitionId !== competitionId))}
+                    competitions={selectedPlayer.competitions}
+                    onAddCompetition={addCompetition}
+                    onDeleteCompetition={deleteCompetition}
                 ></Competitions>
 
                 <Period
                     availableYears={availableYears}
-                    competitions={competitions}
+                    competitions={selectedPlayer.competitions}
                     selectedPlayer={selectedPlayer}
                     selectedPeriod={periodSelection}
                     onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}

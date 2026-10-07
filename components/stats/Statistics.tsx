@@ -1,5 +1,6 @@
+"use client";
+
 import { ReactNode, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartTypes } from "../../types/charts";
 import ShameCharts from "./Charts/ShameCharts";
 import CompetitionScoreCharts from "./Charts/CompetitionScoreChart";

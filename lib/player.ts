@@ -9,6 +9,6 @@ export async function getPlayers() {
     return users;
 }
 
-export async function setPlayers(players: Player[]) {
+export async function setDBPlayers(players: Player[]) {
     await redis.set('DGSTATS-player' + redisSuffix, players);
 }

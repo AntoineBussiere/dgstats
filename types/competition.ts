@@ -27,5 +27,5 @@ export interface CompetitionData {
     competitionId: number;
     division: string;
     name?: string;
-    date?: Date;
+    date?: string;
 }

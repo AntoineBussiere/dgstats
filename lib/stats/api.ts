@@ -1,4 +1,6 @@
-import { CompetitionDTO, CompetitionData, CompetitionDataDTO } from "../../types/competition.ts";
+'use server'
+
+import { CompetitionDTO, CompetitionDataDTO } from "../../types/competition.ts";
 import { HoleStats, Stats } from "../../types/stats.ts";
 
 

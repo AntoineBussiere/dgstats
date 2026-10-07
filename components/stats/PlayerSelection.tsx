@@ -1,6 +1,8 @@
+"use client";
+
 import { useState } from "react";
 import { Player } from "../../types/player";
-import { setPlayers } from "../../lib/player";
+import { setDBPlayers } from "../../lib/player";
 
 type Props = {
     players: Array<Player>,
@@ -28,11 +30,12 @@ export default function PlayerSelection({players, selectedPlayer, onSelectedPlay
         const newPlayer: Player = {
             firstname: newPlayerFirstname,
             lastname: newPlayerLastname,
-            pdgaNumber: PDGANum
+            pdgaNumber: PDGANum,
+            competitions: []
         }
 
         try {
-            await setPlayers([...players, newPlayer]);
+            await setDBPlayers([...players, newPlayer]);
             onAddPlayer(newPlayer);
             resetForm();
         } catch (e) {
