@@ -40,7 +40,6 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
             // const stats = await getStats(selectedPlayer.pdgaNumber, selectedPlayer.competitions);
             setStatistics(stats);
             console.log(stats);
-            
         }
 
         loadStats();

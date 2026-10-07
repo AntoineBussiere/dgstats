@@ -1,3 +1,5 @@
+"use client"
+
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 type Props = {
@@ -6,6 +8,7 @@ type Props = {
 }
 
 export default function ProgressionChart({ progressionData, compareToGlobal }: Props) {
+
     return (
         <div className="mt-8 h-90 w-full">
             <ResponsiveContainer
@@ -27,16 +30,19 @@ export default function ProgressionChart({ progressionData, compareToGlobal }: P
                     />
 
                     <XAxis
-                        dataKey="round"
+                        dataKey="name"
                         stroke="#64748b"
                         tickLine={false}
                         axisLine={false}
+                        tick={false}
                     />
+                    {'lol'}
 
                     <YAxis
                         stroke="#64748b"
                         tickLine={false}
                         axisLine={false}
+                        domain={[700, 1050]}
                     />
 
                     <Tooltip
@@ -63,8 +69,8 @@ export default function ProgressionChart({ progressionData, compareToGlobal }: P
 
                     <Line
                         type="monotone"
-                        dataKey="score"
-                        name="Période sélectionnée"
+                        dataKey="roundRating"
+                        name="Rating de la compétition"
                         stroke="#818cf8"
                         strokeWidth={3}
                         dot={{

@@ -1,11 +1,11 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { ChartTypes } from "../../types/charts";
 import ShameCharts from "./Charts/ShameCharts";
 import CompetitionScoreCharts from "./Charts/CompetitionScoreChart";
 import ProgressionChart from "./Charts/ProgressionChart";
-import { PeriodSelection } from "../../types/period";
+import { PeriodSelection, PeriodType } from "../../types/period";
 import RepartitionCharts from "./Charts/RepartitionCharts";
 import { CompetitionStats, GlobalStats } from "../../types/stats";
 import { addPlusIfPositive } from "../../lib/stats/utils";
@@ -60,9 +60,30 @@ type Props = {
 export default function Statistics({ periodSelection, globalStatistics, statsPerCompetition }: Props) {
     const [activeStat, setActiveStat] = useState(ChartTypes.progression);
 
+    const progressionData = useMemo(() => {
+        if ([PeriodType.global, PeriodType.year].includes(periodSelection.type)) {
+            let filteredStats: CompetitionStats[];
+            switch(periodSelection.type) {
+                case PeriodType.global:
+                    filteredStats = statsPerCompetition;
+                    break;
+                case PeriodType.year:
+                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
+                    break;
+            }
+            return filteredStats.sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
+                return {
+                    name: x.competitionName,
+                    roundRating: x.stats.roundRating,
+                    rating: x.stats.rating
+                };
+            });
+        }
+    }, [periodSelection, globalStatistics, statsPerCompetition]);
+
     return (
         <>
-            <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
                 <StatCard
                     label="Score moyen"
                     value={addPlusIfPositive(globalStatistics.meanScore)}
@@ -82,6 +103,12 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                 />
 
                 <StatCard
+                    label="Putt le plus long"
+                    value={globalStatistics.longestPutt + 'm'}
+                    detail=""
+                />
+
+                <StatCard
                     label="Rounds"
                     value={globalStatistics.nbRounds.toString()}
                     detail="comptabilisés"
@@ -95,20 +122,40 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             Statistiques
                         </p>
 
-                        <StatTab
-                            active={ activeStat === ChartTypes.progression }
-                            onClick={() => setActiveStat(ChartTypes.progression)}
-                            title={ ChartTypes.progression }
-                            description="Évolution des scores"
-                            icon="↗"
-                        />
+                        { [PeriodType.global, PeriodType.year].includes(periodSelection.type) && (
+                            <StatTab
+                                active={ activeStat === ChartTypes.progression }
+                                onClick={() => setActiveStat(ChartTypes.progression)}
+                                title={ ChartTypes.progression }
+                                description="Évolution du rating"
+                                icon={
+                                    <svg
+                                        className="text-indigo-400 scale-80" fill="currentColor" height="200px" width="200px" version="1.1" id="Layer_1"
+                                        xmlns="http://www.w3.org/2000/svg" viewBox="-45.5 -45.5 546.00 546.00" stroke="currentColor" strokeWidth="0.00455" transform="matrix(1, 0, 0, 1, 0, 0)rotate(0)">
+                                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" stroke="#CCCCCC" strokeWidth="7.279999999999999"></g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path d="M415,102.509c-22.091,0-40,17.909-40,40c0,5.542,1.128,10.821,3.166,15.62l-83.791,83.792 c-4.799-2.038-10.078-3.167-15.621-3.167s-10.822,1.129-15.621,3.167l-50.053-50.053c2.038-4.799,3.166-10.078,3.166-15.621 c0-22.091-17.909-40-40-40c-22.091,0-40,17.909-40,40c0,5.542,1.128,10.821,3.166,15.62l-83.792,83.791 c-4.799-2.038-10.078-3.167-15.621-3.167c-22.091,0-40,17.909-40,40s17.909,40,40,40s40-17.909,40-40 c0-5.542-1.128-10.821-3.166-15.62l83.792-83.791c4.799,2.038,10.078,3.166,15.621,3.166c5.542,0,10.821-1.128,15.62-3.166 l50.054,50.054c-2.038,4.799-3.166,10.078-3.166,15.62c0,22.091,17.909,40,40,40c22.091,0,40-17.909,40-40 c0-5.542-1.128-10.821-3.166-15.62l83.791-83.792c4.799,2.038,10.078,3.166,15.621,3.166c22.091,0,40-17.909,40-40 S437.091,102.509,415,102.509z"></path>
+                                        </g>
+                                    </svg>
+                                }
+                            />
+                        )}
 
                         <StatTab
                             active={ activeStat === ChartTypes.repartition }
                             onClick={() => setActiveStat(ChartTypes.repartition)}
                             title={ ChartTypes.repartition }
                             description="Birdies, pars, bogeys..."
-                            icon="▥"
+                            icon={
+                                <svg className="text-indigo-400 scale-80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path d="M15 5V10M9 14V19M4.6 10H19.4C19.9601 10 20.2401 10 20.454 9.89101C20.6422 9.79513 20.7951 9.64215 20.891 9.45399C21 9.24008 21 8.96005 21 8.4V6.6C21 6.03995 21 5.75992 20.891 5.54601C20.7951 5.35785 20.6422 5.20487 20.454 5.10899C20.2401 5 19.9601 5 19.4 5H4.6C4.03995 5 3.75992 5 3.54601 5.10899C3.35785 5.20487 3.20487 5.35785 3.10899 5.54601C3 5.75992 3 6.03995 3 6.6V8.4C3 8.96005 3 9.24008 3.10899 9.45399C3.20487 9.64215 3.35785 9.79513 3.54601 9.89101C3.75992 10 4.03995 10 4.6 10ZM4.6 19H19.4C19.9601 19 20.2401 19 20.454 18.891C20.6422 18.7951 20.7951 18.6422 20.891 18.454C21 18.2401 21 17.9601 21 17.4V15.6C21 15.0399 21 14.7599 20.891 14.546C20.7951 14.3578 20.6422 14.2049 20.454 14.109C20.2401 14 19.9601 14 19.4 14H4.6C4.03995 14 3.75992 14 3.54601 14.109C3.35785 14.2049 3.20487 14.3578 3.10899 14.546C3 14.7599 3 15.0399 3 15.6V17.4C3 17.9601 3 18.2401 3.10899 18.454C3.20487 18.6422 3.35785 18.7951 3.54601 18.891C3.75992 19 4.03995 19 4.6 19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                                    </g>
+                                </svg>
+                            }
                         />
 
                         <StatTab
@@ -116,7 +163,15 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             onClick={() => setActiveStat(ChartTypes.competitionScore)}
                             title={ ChartTypes.competitionScore }
                             description="Performance par round"
-                            icon="-"
+                            icon={
+                                <svg className="text-indigo-400 scale-80" viewBox="-4.8 -4.8 33.60 33.60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                                    <g id="SVGRepo_iconCarrier">
+                                        <path d="M2 12C2 11.4477 2.44772 11 3 11H21C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13H3C2.44772 13 2 12.5523 2 12Z" fill="currentColor"></path>
+                                    </g>
+                                </svg>
+                            }
                         />
 
                         <StatTab
