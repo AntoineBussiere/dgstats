@@ -13,7 +13,7 @@ export async function getStats(PDGANum: number, competitionDatas: CompetitionDat
 
         fullStats.push({
             competitionName: competition.data.SimpleName,
-            competitionDate: new Date(competition.data.EndDate),
+            competitionDate: competition.data.EndDate,
             stats: aggregateStats(roundStats)
         });
     }

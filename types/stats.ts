@@ -30,20 +30,20 @@ export interface HoleStats {
 }
 
 export interface BetterStats {
-    c1xsuccess: number;
-    c1xtotal: number;
-    c2success: number;
-    c2total: number;
-    scramblesuccess: number;
-    scrambletotal: number;
-    c1rsuccess: number;
-    c1rtotal: number;
-    c2rsuccess: number;
-    c2rtotal: number;
-    nbOB: number;
-    nbHazard: number;
-    nbMissMando: number;
-    longestPutt: number;
+    c1xsuccess?: number;
+    c1xtotal?: number;
+    c2success?: number;
+    c2total?: number;
+    scramblesuccess?: number;
+    scrambletotal?: number;
+    c1rsuccess?: number;
+    c1rtotal?: number;
+    c2rsuccess?: number;
+    c2rtotal?: number;
+    nbOB?: number;
+    nbHazard?: number;
+    nbMissMando?: number;
+    longestPutt?: number;
     nbEagle: number;
     nbBirdie: number;
     nbPar: number;
@@ -51,10 +51,38 @@ export interface BetterStats {
     nbDBoggiePlus: number;
     rating: number;
     roundRating: number;
+    nbRounds?: number;
+    totalScore: number;
+    bestRound: number;
+}
+
+export interface GlobalStats {
+    c1xsuccess?: number;
+    c1xtotal?: number;
+    c2success?: number;
+    c2total?: number;
+    scramblesuccess?: number;
+    scrambletotal?: number;
+    c1rsuccess?: number;
+    c1rtotal?: number;
+    c2rsuccess?: number;
+    c2rtotal?: number;
+    nbOB?: number;
+    nbHazard?: number;
+    nbMissMando?: number;
+    longestPutt?: number;
+    nbEagle: number;
+    nbBirdie: number;
+    nbPar: number;
+    nbBoggie: number;
+    nbDBoggiePlus: number;
+    nbRounds?: number;
+    meanScore: number;
+    bestRound: number;
 }
 
 export interface CompetitionStats {
     competitionName: string;
-    competitionDate: Date;
+    competitionDate: string;
     stats: BetterStats;
 }

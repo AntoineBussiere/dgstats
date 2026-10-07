@@ -7,6 +7,8 @@ import CompetitionScoreCharts from "./Charts/CompetitionScoreChart";
 import ProgressionChart from "./Charts/ProgressionChart";
 import { PeriodSelection } from "../../types/period";
 import RepartitionCharts from "./Charts/RepartitionCharts";
+import { CompetitionStats, GlobalStats } from "../../types/stats";
+import { addPlusIfPositive } from "../../lib/stats/utils";
 
 const scoreEvolution = [
     { round: "R1", score: -4 },
@@ -50,10 +52,12 @@ const scoreDistribution = [
 ];
 
 type Props = {
-    periodSelection: PeriodSelection
+    periodSelection: PeriodSelection,
+    globalStatistics: GlobalStats,
+    statsPerCompetition: CompetitionStats[]
 }
 
-export default function Statistics({ periodSelection }: Props) {
+export default function Statistics({ periodSelection, globalStatistics, statsPerCompetition }: Props) {
     const [activeStat, setActiveStat] = useState(ChartTypes.progression);
 
     return (
@@ -61,25 +65,25 @@ export default function Statistics({ periodSelection }: Props) {
             <section className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
                 <StatCard
                     label="Score moyen"
-                    value="-4,2"
+                    value={addPlusIfPositive(globalStatistics.meanScore)}
                     detail="par rapport au par"
                 />
 
                 <StatCard
                     label="Meilleur score"
-                    value="-8"
+                    value={addPlusIfPositive(globalStatistics.bestRound)}
                     detail="sur un round"
                 />
 
                 <StatCard
-                    label="Birdies"
-                    value="18,4 %"
+                    label="Birdies (ou mieux)"
+                    value={(Math.round((globalStatistics.nbBirdie + globalStatistics.nbEagle) / (globalStatistics.nbBirdie + globalStatistics.nbEagle + globalStatistics.nbPar + globalStatistics.nbBoggie + globalStatistics.nbDBoggiePlus) * 1000) / 10) + '%'}
                     detail="des trous joués"
                 />
 
                 <StatCard
                     label="Rounds"
-                    value="34"
+                    value={globalStatistics.nbRounds.toString()}
                     detail="comptabilisés"
                 />
             </section>
@@ -121,8 +125,8 @@ export default function Statistics({ periodSelection }: Props) {
                             title={ ChartTypes.shame }
                             description="Meh"
                             icon={
-                                <svg version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" 
-                                    width="28px" height="28px" stroke="white" viewBox="0 0 512 512">
+                                <svg className="text-indigo-400 scale-80" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" 
+                                    width="28px" height="28px" fill="currentColor" viewBox="0 0 512 512">
                                     <g>
                                         <path d="M437.914,74.078C392.43,27,326.117,0,255.992,0C185.883,0,119.57,27,74.102,74.063
                                             c-42.5,44-64.703,102.828-62.531,165.688l6.609,83.875c6.031,84.75,55.234,93.906,76.094,93.906c7.563,0,15.531-1.094,23.625-3.188

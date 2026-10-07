@@ -21,6 +21,8 @@ interface Score {
     Scores: string;
     Rating: number;
     RoundRating: number;
+    ParThruRound: number;
+    RoundtoPar: number;
 }
 
 export interface CompetitionData {

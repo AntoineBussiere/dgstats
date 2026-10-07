@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Player } from "../../types/player";
 import PlayerSelection from "./PlayerSelection";
 import { CompetitionData } from "../../types/competition";
@@ -9,17 +9,42 @@ import { PeriodSelection, PeriodType } from "../../types/period";
 import Period from "./Period";
 import Statistics from "./Statistics";
 import { setDBPlayers } from "../../lib/player";
+import { getStats } from "../../lib/stats/getStats";
+import { CompetitionStats } from "../../types/stats";
+import { stats } from "../../mock/stats-mock";
+import { aggregateGlobalStats } from "../../lib/stats/utils";
 
 export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const [selectedPlayer, setSelectedPlayer] = useState<Player>(initialPlayers[0]);
+    const [statistics, setStatistics] = useState<CompetitionStats[]>([]);
 
     const availableYears = useMemo(
         () => [
             ...new Set(selectedPlayer.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
         ].sort((a, b) => b - a), [selectedPlayer.competitions]
     );
+
+    const globalStatistics = useMemo(
+        () => aggregateGlobalStats(statistics),
+        [statistics]
+    );
+
+    useEffect(() => {
+        if (!selectedPlayer) {
+            return;
+        }
+
+        async function loadStats() {
+            // const stats = await getStats(selectedPlayer.pdgaNumber, selectedPlayer.competitions);
+            setStatistics(stats);
+            console.log(stats);
+            
+        }
+
+        loadStats();
+    }, [selectedPlayer?.pdgaNumber]);
 
     async function addCompetition(newCompetition: CompetitionData) {
         const updatedPlayers = players.map((player) =>
@@ -112,7 +137,11 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                     onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
                 ></Period>
 
-                <Statistics periodSelection={periodSelection}></Statistics>
+                <Statistics
+                    periodSelection={periodSelection}
+                    globalStatistics={globalStatistics}
+                    statsPerCompetition={statistics}
+                ></Statistics>
             </div>
         </main>
     );

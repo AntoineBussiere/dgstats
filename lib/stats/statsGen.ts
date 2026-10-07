@@ -1,7 +1,7 @@
 import { getAPIHoleStats, getAPIStats, getCompetition } from "./api.ts";
 import { BetterStats, HoleStats, Stats } from "../../types/stats.ts";
 
-function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, rating: number, roundRating: number): BetterStats {
+function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, rating: number, roundRating: number, totalScore: number, bestRound: number): BetterStats {
     const score = s.split(",").filter(value => value !== "").map(Number);
     const par = p.split(",").filter(value => value !== "").slice(0, score.length).map(Number);
 
@@ -44,42 +44,45 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
     let nbMissMando = 0;
     let longestPutt = 0;
 
-    for (let i = 0; i < stats.length; i++) {
-        const stat = stats[i];
-        const holeStat = holeStats.scoreThrows[i];
-        if (stat && holeStat) {
-            // C1X
-            c1xsuccess += stat.holeBreakdown.throwIn > 10 && stat.holeBreakdown.c1x ? 1 : 0;    // 10ft ~= 3m
-            c1xtotal += stat.holeBreakdown.c1x;
-
-            // C2
-            c2success += stat.holeBreakdown.throwIn > 30 && stat.holeBreakdown.c2 ? 1 : 0;      // 30ft ~= 10m
-            c2total += stat.holeBreakdown.c2;
-
-            // SCRAMBLE
-            scramblesuccess += stat.holeBreakdown.scramble === "success" ? 1 : 0;
-            scrambletotal += stat.holeBreakdown.scramble !== "" ? 1 : 0;
-
-            // C1 reg
-            const regulationThrow = holeStat.holeThrows[holeStat.liveLayoutDetail.par - 3];
-            c1rsuccess += regulationThrow?.liveScoreThrow.zoneId === 3 || regulationThrow?.liveScoreThrow.zoneId === 5 ? 1 : 0;
-            c1rtotal += 1;
-
-            // C2 reg
-            c2rsuccess += [3, 4, 5].includes(
-                holeStat.holeThrows[holeStat.liveLayoutDetail.par - 3]?.liveScoreThrow.zoneId ?? -1
-            ) ? 1 : 0;
-            c2rtotal += 1;
-            
-            nbOB += stat.holeBreakdown.ob;
-            nbHazard += stat.holeBreakdown.hazard;
-            nbMissMando += stat.holeBreakdown.missedMando;
-
-            longestPutt = stat.holeBreakdown.throwIn > longestPutt ? stat.holeBreakdown.throwIn : longestPutt;
+    if (holeStats) {
+        for (let i = 0; i < stats.length; i++) {
+            const stat = stats[i];
+            const holeStat = holeStats.scoreThrows[i];
+            if (stat && holeStat) {
+                // C1X
+                c1xsuccess += stat.holeBreakdown.throwIn > 10 && stat.holeBreakdown.c1x ? 1 : 0;    // 10ft ~= 3m
+                c1xtotal += stat.holeBreakdown.c1x;
+    
+                // C2
+                c2success += stat.holeBreakdown.throwIn > 30 && stat.holeBreakdown.c2 ? 1 : 0;      // 30ft ~= 10m
+                c2total += stat.holeBreakdown.c2;
+    
+                // SCRAMBLE
+                scramblesuccess += stat.holeBreakdown.scramble === "success" ? 1 : 0;
+                scrambletotal += stat.holeBreakdown.scramble !== "" ? 1 : 0;
+    
+                // C1 reg
+                const regulationThrow = holeStat.holeThrows[holeStat.liveLayoutDetail.par - 3];
+                c1rsuccess += regulationThrow?.liveScoreThrow.zoneId === 3 || regulationThrow?.liveScoreThrow.zoneId === 5 ? 1 : 0;
+                c1rtotal += 1;
+    
+                // C2 reg
+                c2rsuccess += [3, 4, 5].includes(
+                    holeStat.holeThrows[holeStat.liveLayoutDetail.par - 3]?.liveScoreThrow.zoneId ?? -1
+                ) ? 1 : 0;
+                c2rtotal += 1;
+                
+                nbOB += stat.holeBreakdown.ob;
+                nbHazard += stat.holeBreakdown.hazard;
+                nbMissMando += stat.holeBreakdown.missedMando;
+    
+                longestPutt = stat.holeBreakdown.throwIn > longestPutt ? stat.holeBreakdown.throwIn : longestPutt;
+            }
         }
+    
+        longestPutt = Math.round(longestPutt * 0.3048);
     }
 
-    longestPutt = Math.round(longestPutt * 0.3048);
 
     return {
         c1xsuccess,
@@ -102,7 +105,9 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
         nbBoggie,
         nbDBoggiePlus,
         rating,
-        roundRating
+        roundRating,
+        totalScore,
+        bestRound
     }
 }
 
@@ -118,14 +123,13 @@ export async function getRoundStats(competitionId: number, division: string, rou
     }
 
     const stats = await getAPIStats(score.ScoreID);
+    let holeStats: HoleStats;
 
-    if (!stats[0]?.holeBreakdown) {
-        return null;
+    if (stats[0]?.holeBreakdown) {
+        holeStats = await getAPIHoleStats(score.ScoreID);
     }
 
-    const holeStats = await getAPIHoleStats(score.ScoreID);
-
-    return genStats(stats, score.Scores, score.Pars, holeStats, score.Rating, score.RoundRating);
+    return genStats(stats, score.Scores, score.Pars, holeStats, score.Rating, score.RoundRating, score.ParThruRound, score.RoundtoPar);
 }
 
 export async function getCompetitionStats(competitionId: number, division: string, playerId: number): Promise<BetterStats[]> {
