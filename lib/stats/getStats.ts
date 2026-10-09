@@ -12,7 +12,7 @@ export async function getStats(PDGANum: number, competitionDatas: CompetitionDat
         const roundStats = await getCompetitionStats(competitionData.competitionId, competitionData.division, PDGANum);
 
         fullStats.push({
-            competitionName: competition.data.SimpleName,
+            competitionName: competition.data.SimpleName.replace(/\s*(?:,\s*sponso|- \s*sponso).*$/i, ""),
             competitionDate: competition.data.EndDate,
             stats: aggregateStats(roundStats)
         });

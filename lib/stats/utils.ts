@@ -1,3 +1,5 @@
+import { BIRDIE_COLOR } from "../../assets/colors.ts";
+import { ProgressBarItem } from "../../types/progressbar.ts";
 import { BetterStats, CompetitionStats, GlobalStats } from "../../types/stats.ts";
 
 export function aggregateStats(stats: Array<BetterStats>): BetterStats {
@@ -20,8 +22,8 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
             nbEagle: acc.nbEagle + obj.nbEagle,
             nbBirdie: acc.nbBirdie + obj.nbBirdie,
             nbPar: acc.nbPar + obj.nbPar,
-            nbBoggie: acc.nbBoggie + obj.nbBoggie,
-            nbDBoggiePlus: acc.nbDBoggiePlus + obj.nbDBoggiePlus,
+            nbBogey: acc.nbBogey + obj.nbBogey,
+            nbDBogeyPlus: acc.nbDBogeyPlus + obj.nbDBogeyPlus,
             rating: obj.rating,
             roundRatingSum: acc.roundRatingSum + obj.roundRating,
             roundRatingCount: acc.roundRatingCount + 1,
@@ -47,8 +49,8 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
             nbEagle: 0,
             nbBirdie: 0,
             nbPar: 0,
-            nbBoggie: 0,
-            nbDBoggiePlus: 0,
+            nbBogey: 0,
+            nbDBogeyPlus: 0,
             rating: 0,
             roundRatingSum: 0,
             roundRatingCount: 0,
@@ -88,8 +90,8 @@ export function aggregateGlobalStats(stats: CompetitionStats[]): GlobalStats {
             nbEagle: acc.nbEagle + obj.stats.nbEagle,
             nbBirdie: acc.nbBirdie + obj.stats.nbBirdie,
             nbPar: acc.nbPar + obj.stats.nbPar,
-            nbBoggie: acc.nbBoggie + obj.stats.nbBoggie,
-            nbDBoggiePlus: acc.nbDBoggiePlus + obj.stats.nbDBoggiePlus,
+            nbBogey: acc.nbBogey + obj.stats.nbBogey,
+            nbDBogeyPlus: acc.nbDBogeyPlus + obj.stats.nbDBogeyPlus,
 
             nbRounds: acc.nbRounds + obj.stats.nbRounds,
 
@@ -116,8 +118,8 @@ export function aggregateGlobalStats(stats: CompetitionStats[]): GlobalStats {
             nbEagle: 0,
             nbBirdie: 0,
             nbPar: 0,
-            nbBoggie: 0,
-            nbDBoggiePlus: 0,
+            nbBogey: 0,
+            nbDBogeyPlus: 0,
             nbRounds: 0,
 
             totalScoreSum: 0,

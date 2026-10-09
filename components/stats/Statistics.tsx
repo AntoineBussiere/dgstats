@@ -8,48 +8,7 @@ import ProgressionChart from "./Charts/ProgressionChart";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import RepartitionCharts from "./Charts/RepartitionCharts";
 import { CompetitionStats, GlobalStats } from "../../types/stats";
-import { addPlusIfPositive } from "../../lib/stats/utils";
-
-const scoreEvolution = [
-    { round: "R1", score: -4 },
-    { round: "R2", score: -7 },
-    { round: "R3", score: -2 },
-    { round: "R4", score: -8 },
-];
-
-const progressionData = [
-    { round: "R1", score: -4, global: -3 },
-    { round: "R2", score: -7, global: -4 },
-    { round: "R3", score: -2, global: -3 },
-    { round: "R4", score: -8, global: -4 },
-];
-
-const scoreDistribution = [
-    {
-        round: "Global",
-        eagle: 1,
-        birdie: 18,
-        par: 54,
-        bogey: 22,
-        double: 5,
-    },
-    {
-        round: "2026",
-        eagle: 2,
-        birdie: 21,
-        par: 52,
-        bogey: 20,
-        double: 5,
-    },
-    {
-        round: "French Open",
-        eagle: 1,
-        birdie: 16,
-        par: 56,
-        bogey: 22,
-        double: 5,
-    },
-];
+import { addPlusIfPositive, aggregateGlobalStats } from "../../lib/stats/utils";
 
 type Props = {
     periodSelection: PeriodSelection,
@@ -71,7 +30,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                     filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
                     break;
             }
-            return filteredStats.sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
+            return [...filteredStats].sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
                 return {
                     name: x.competitionName,
                     roundRating: x.stats.roundRating,
@@ -79,7 +38,55 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                 };
             });
         }
-    }, [periodSelection, globalStatistics, statsPerCompetition]);
+    }, [periodSelection, statsPerCompetition]);
+
+    const scoreDistribution = useMemo(() => {
+        let filteredStats: CompetitionStats[];
+        switch(periodSelection.type) {
+            case PeriodType.global:
+                filteredStats = statsPerCompetition;
+                break;
+            case PeriodType.year:
+                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
+                break;
+            case PeriodType.competition:
+                filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name)
+                break;
+        }
+        return [...filteredStats].sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
+            const nbHole = x.stats.nbEagle + x.stats.nbBirdie + x.stats.nbPar + x.stats.nbBogey + x.stats.nbDBogeyPlus;
+            return {
+                name: x.competitionName,
+                eagle: x.stats.nbEagle,
+                eaglepercent: x.stats.nbEagle / nbHole * 100,
+                birdie: x.stats.nbBirdie,
+                birdiepercent: x.stats.nbBirdie / nbHole * 100,
+                par: x.stats.nbPar,
+                parpercent: x.stats.nbPar / nbHole * 100,
+                bogey: x.stats.nbBogey,
+                bogeypercent: x.stats.nbBogey / nbHole * 100,
+                double: x.stats.nbDBogeyPlus,
+                doublepercent: x.stats.nbDBogeyPlus / nbHole * 100,
+            };
+        });
+    }, [periodSelection, statsPerCompetition]);
+
+    const filteredGlobalStats: GlobalStats = useMemo(() => {
+        if (periodSelection.type === PeriodType.global) {
+            return globalStatistics;
+        } else {
+            let filteredStats: CompetitionStats[];
+            switch(periodSelection.type) {
+                case PeriodType.year:
+                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
+                    break;
+                case PeriodType.competition:
+                    filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name)
+                    break;
+            }
+            return aggregateGlobalStats(filteredStats);
+        }
+    }, [periodSelection, statsPerCompetition, globalStatistics]);
 
     return (
         <>
@@ -98,7 +105,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
 
                 <StatCard
                     label="Birdies (ou mieux)"
-                    value={(Math.round((globalStatistics.nbBirdie + globalStatistics.nbEagle) / (globalStatistics.nbBirdie + globalStatistics.nbEagle + globalStatistics.nbPar + globalStatistics.nbBoggie + globalStatistics.nbDBoggiePlus) * 1000) / 10) + '%'}
+                    value={(Math.round((globalStatistics.nbBirdie + globalStatistics.nbEagle) / (globalStatistics.nbBirdie + globalStatistics.nbEagle + globalStatistics.nbPar + globalStatistics.nbBogey + globalStatistics.nbDBogeyPlus) * 1000) / 10) + '%'}
                     detail="des trous joués"
                 />
 
@@ -226,7 +233,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                                     title={ ChartTypes.repartition }
                                     description="Répartition de vos résultats par type de score."
                                 />
-                                <RepartitionCharts scoreDistribution={scoreDistribution} periodSelection={periodSelection}></RepartitionCharts>
+                                <RepartitionCharts scoreDistribution={scoreDistribution}></RepartitionCharts>
                             </div>
                         )}
 
@@ -236,7 +243,9 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                                     title={ ChartTypes.competitionScore }
                                     description="Visualisez rapidement la performance de chaque round."
                                 />
-                                <CompetitionScoreCharts scoreEvolution={scoreEvolution}></CompetitionScoreCharts>
+                                <CompetitionScoreCharts
+                                    globalStats={filteredGlobalStats}
+                                ></CompetitionScoreCharts>
                             </div>
                         )}
 

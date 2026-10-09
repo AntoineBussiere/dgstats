@@ -11,7 +11,7 @@ import Statistics from "./Statistics";
 import { setDBPlayers } from "../../lib/player";
 import { getStats } from "../../lib/stats/getStats";
 import { CompetitionStats } from "../../types/stats";
-import { stats } from "../../mock/stats-mock";
+import { morgStats, stats } from "../../mock/stats-mock";
 import { aggregateGlobalStats } from "../../lib/stats/utils";
 
 export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
@@ -20,11 +20,10 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
     const [selectedPlayer, setSelectedPlayer] = useState<Player>(initialPlayers[0]);
     const [statistics, setStatistics] = useState<CompetitionStats[]>([]);
 
-    const availableYears = useMemo(
-        () => [
-            ...new Set(selectedPlayer.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
-        ].sort((a, b) => b - a), [selectedPlayer.competitions]
-    );
+    const availableYears = [
+        ...new Set(selectedPlayer.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
+    ].sort((a, b) => b - a);
+    
 
     const globalStatistics = useMemo(
         () => aggregateGlobalStats(statistics),
@@ -38,7 +37,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
 
         async function loadStats() {
             // const stats = await getStats(selectedPlayer.pdgaNumber, selectedPlayer.competitions);
-            setStatistics(stats);
+            setStatistics(morgStats);
             console.log(stats);
         }
 

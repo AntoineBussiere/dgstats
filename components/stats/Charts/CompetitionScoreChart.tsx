@@ -1,67 +1,54 @@
 "use client"
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import ProgressBar from "./ProgressBar";
+import { BIRDIE_COLOR, EAGLE_COLOR } from "../../../assets/colors";
+import { GlobalStats } from "../../../types/stats";
+import { useMemo } from "react";
 
 type Props = {
-    scoreEvolution: any
+    globalStats: GlobalStats,
 }
 
-export default function CompetitionScoreCharts({scoreEvolution}: Props) {
+export default function CompetitionScoreCharts({globalStats}: Props) {
+    const scramble = [{
+        name: 'Scramble',
+        color: BIRDIE_COLOR,
+        value: globalStats.scramblesuccess,
+        total: globalStats.scrambletotal
+    }];
+
+    const reg = [{
+        name: 'C1R',
+        color: BIRDIE_COLOR,
+        value: globalStats.c1rsuccess,
+        total: globalStats.c1rtotal
+    }, {
+        name: 'C2R',
+        color: EAGLE_COLOR,
+        value: globalStats.c2rsuccess,
+        total: globalStats.c2rtotal
+    }];
+
+    const C1 = [{
+        name: 'C1X Putting',
+        color: BIRDIE_COLOR,
+        value: globalStats.c1xsuccess,
+        total: globalStats.c1xtotal
+    }];
+
+    const C2 = [{
+        name: 'C1X Putting',
+        color: BIRDIE_COLOR,
+        value: globalStats.c2success,
+        total: globalStats.c2total
+    }];
+
     return (
-        <div className="mt-8 h-90 w-full">
-            <ResponsiveContainer
-                width="100%"
-                height="100%"
-            >
-                <BarChart
-                    data={scoreEvolution}
-                    margin={{
-                        top: 10,
-                        right: 10,
-                        left: -20,
-                        bottom: 0,
-                    }}
-                >
-                    <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke="#1e293b"
-                    />
-
-                    <XAxis
-                        dataKey="round"
-                        stroke="#64748b"
-                        tickLine={false}
-                        axisLine={false}
-                    />
-
-                    <YAxis
-                        stroke="#64748b"
-                        tickLine={false}
-                        axisLine={false}
-                    />
-
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor:
-                                "#0f172a",
-                            border: "1px solid #334155",
-                            borderRadius: "12px",
-                            color: "#f8fafc",
-                        }}
-                    />
-
-                    <Bar
-                        dataKey="score"
-                        name="Score"
-                        radius={[
-                            6,
-                            6,
-                            0,
-                            0,
-                        ]}
-                    />
-                </BarChart>
-            </ResponsiveContainer>
+        <div className="mt-8 h-90 w-full space-y-3">
+            <ProgressBar data={scramble}></ProgressBar>
+            <ProgressBar data={reg}></ProgressBar>
+            <ProgressBar data={C1}></ProgressBar>
+            <ProgressBar data={C2}></ProgressBar>
         </div>
     );
 }

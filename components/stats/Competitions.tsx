@@ -26,7 +26,7 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
 
         const newCompetition: CompetitionData = {
             competitionId: Number(idDivision[0]),
-            name: competitionData.data.SimpleName,
+            name: competitionData.data.SimpleName.replace(/\s*(?:,\s*sponso|- \s*sponso).*$/i, ""),
             division: idDivision[1],
             date: competitionData.data.EndDate
         };

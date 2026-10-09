@@ -8,8 +8,8 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
     let nbEagle = 0;
     let nbBirdie = 0;
     let nbPar = 0;
-    let nbBoggie = 0;
-    let nbDBoggiePlus = 0;
+    let nbBogey = 0;
+    let nbDBogeyPlus = 0;
 
     for (let i = 0; i < score.length; i++) {
         const a = score[i];
@@ -22,9 +22,9 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
             } else if (a === b) {
                 nbPar++;
             } else if (a === b + 1) {
-                nbBoggie++;
+                nbBogey++;
             } else {
-                nbDBoggiePlus++;
+                nbDBogeyPlus++;
             }
         }
     }
@@ -102,8 +102,8 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
         nbEagle,
         nbBirdie,
         nbPar,
-        nbBoggie,
-        nbDBoggiePlus,
+        nbBogey,
+        nbDBogeyPlus,
         rating,
         roundRating,
         totalScore,

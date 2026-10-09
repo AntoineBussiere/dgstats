@@ -1,14 +1,30 @@
 "use client"
 
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { PeriodSelection } from "../../../types/period";
+import { BIRDIE_COLOR, BOGEY_COLOR, DBOGEY_COLOR, EAGLE_COLOR, PAR_COLOR } from "../../../assets/colors";
 
 type Props = {
     scoreDistribution: any;
-    periodSelection: PeriodSelection
 }
 
-export default function RepartitionCharts({scoreDistribution, periodSelection}: Props) {
+export default function RepartitionCharts({scoreDistribution}: Props) {
+    function formatTooltip(value, name, props) {
+        const { eagle, birdie, par, bogey, double } = props.payload;
+
+        const values = {
+            Eagle: eagle,
+            Birdie: birdie,
+            Par: par,
+            Bogey: bogey,
+            'Double bogey+': double,
+        };
+
+        return [
+            `${values[name]} (${value.toFixed(1)} %)`,
+            name,
+        ];
+    }
+
     return (
         <div className="mt-8 h-90 w-full">
             <ResponsiveContainer
@@ -16,13 +32,7 @@ export default function RepartitionCharts({scoreDistribution, periodSelection}: 
                 height="100%"
             >
                 <BarChart
-                    data={
-                        periodSelection.compareToGlobal
-                            ? scoreDistribution
-                            : scoreDistribution.slice(
-                                    -1,
-                                )
-                    }
+                    data={scoreDistribution}
                     layout="vertical"
                     margin={{
                         top: 10,
@@ -47,11 +57,11 @@ export default function RepartitionCharts({scoreDistribution, periodSelection}: 
 
                     <YAxis
                         type="category"
-                        dataKey="round"
+                        dataKey="name"
                         stroke="#64748b"
                         tickLine={false}
                         axisLine={false}
-                        width={90}
+                        width={250}
                     />
 
                     <Tooltip
@@ -62,38 +72,45 @@ export default function RepartitionCharts({scoreDistribution, periodSelection}: 
                             borderRadius: "12px",
                             color: "#f8fafc",
                         }}
+                        itemSorter={null}
+                        formatter={formatTooltip}
                     />
 
-                    <Legend />
+                    <Legend itemSorter={null} />
 
                     <Bar
-                        dataKey="eagle"
+                        dataKey="eaglepercent"
                         name="Eagle"
                         stackId="score"
+                        fill={EAGLE_COLOR}
                     />
 
                     <Bar
-                        dataKey="birdie"
+                        dataKey="birdiepercent"
                         name="Birdie"
                         stackId="score"
+                        fill={BIRDIE_COLOR}
                     />
 
                     <Bar
-                        dataKey="par"
+                        dataKey="parpercent"
                         name="Par"
                         stackId="score"
+                        fill={PAR_COLOR}
                     />
 
                     <Bar
-                        dataKey="bogey"
+                        dataKey="bogeypercent"
                         name="Bogey"
                         stackId="score"
+                        fill={BOGEY_COLOR}
                     />
 
                     <Bar
-                        dataKey="double"
+                        dataKey="doublepercent"
                         name="Double bogey+"
                         stackId="score"
+                        fill={DBOGEY_COLOR}
                     />
                 </BarChart>
             </ResponsiveContainer>

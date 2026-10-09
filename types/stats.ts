@@ -29,7 +29,7 @@ export interface HoleStats {
     }>
 }
 
-export interface BetterStats {
+export interface CommonStats {
     c1xsuccess?: number;
     c1xtotal?: number;
     c2success?: number;
@@ -47,38 +47,20 @@ export interface BetterStats {
     nbEagle: number;
     nbBirdie: number;
     nbPar: number;
-    nbBoggie: number;
-    nbDBoggiePlus: number;
-    rating: number;
-    roundRating: number;
+    nbBogey: number;
+    nbDBogeyPlus: number;
     nbRounds?: number;
-    totalScore: number;
     bestRound: number;
 }
 
-export interface GlobalStats {
-    c1xsuccess?: number;
-    c1xtotal?: number;
-    c2success?: number;
-    c2total?: number;
-    scramblesuccess?: number;
-    scrambletotal?: number;
-    c1rsuccess?: number;
-    c1rtotal?: number;
-    c2rsuccess?: number;
-    c2rtotal?: number;
-    nbOB?: number;
-    nbHazard?: number;
-    nbMissMando?: number;
-    longestPutt?: number;
-    nbEagle: number;
-    nbBirdie: number;
-    nbPar: number;
-    nbBoggie: number;
-    nbDBoggiePlus: number;
-    nbRounds?: number;
+export interface BetterStats extends CommonStats {
+    rating: number;
+    roundRating: number;
+    totalScore: number;
+}
+
+export interface GlobalStats extends CommonStats {
     meanScore: number;
-    bestRound: number;
 }
 
 export interface CompetitionStats {
