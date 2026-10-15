@@ -1,6 +1,7 @@
 export enum ChartTypes {
-    competitionScore = 'Score',
+    competitionScore = 'Stats détaillées',
     progression = 'Progression',
     repartition = 'Répartition',
-    shame = 'Stats de la honte'
+    shame = 'Stats de la honte',
+    performance = 'Performance & régularité'
 }

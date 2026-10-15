@@ -16,20 +16,9 @@ export interface Stats {
     }
 }
 
-export interface HoleStats {
-    scoreThrows: Array<{
-        holeThrows: Array<{
-            liveScoreThrow: {
-                zoneId: number
-            }
-        }>,
-        liveLayoutDetail: {
-            par: number
-        }
-    }>
-}
-
 export interface CommonStats {
+    fairwaysuccess?: number;
+    fairwaytotal?: number;
     c1xsuccess?: number;
     c1xtotal?: number;
     c2success?: number;
@@ -51,11 +40,18 @@ export interface CommonStats {
     nbDBogeyPlus: number;
     nbRounds?: number;
     bestRound: number;
+    worstRound: number;
+    worstScore: number;
+    position: number;
+    tied: boolean;
+    nbFullStats: number;
 }
 
-export interface BetterStats extends CommonStats {
+export interface RoundStats extends CommonStats {
     rating: number;
     roundRating: number;
+    bestRoundRating?: number;
+    worstRoundRating?: number;
     totalScore: number;
 }
 
@@ -66,5 +62,24 @@ export interface GlobalStats extends CommonStats {
 export interface CompetitionStats {
     competitionName: string;
     competitionDate: string;
-    stats: BetterStats;
+    nbPlayers: number;
+    stats: RoundStats;
+}
+
+export interface ShameStats {
+    worstScore: number;
+    nbPenalties: number;
+    nbCompetitions: number;
+    nbBogey: number;
+    nbDouble: number;
+    nbBirdie: number;
+    nbHole: number;
+    nbFailedC1: number;
+}
+
+export interface PerformanceStats {
+    top25: number;
+    betterThan: number;
+    biggestRatingDifference: number;
+    ratingStandardDeviation: number;
 }

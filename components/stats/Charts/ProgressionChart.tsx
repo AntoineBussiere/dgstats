@@ -10,7 +10,7 @@ type Props = {
 export default function ProgressionChart({ progressionData, compareToGlobal }: Props) {
 
     return (
-        <div className="mt-8 h-90 w-full">
+        <div className="mt-8 h-110 w-full">
             <ResponsiveContainer
                 width="100%"
                 height="100%"

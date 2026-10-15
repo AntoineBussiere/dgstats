@@ -7,8 +7,10 @@ import CompetitionScoreCharts from "./Charts/CompetitionScoreChart";
 import ProgressionChart from "./Charts/ProgressionChart";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import RepartitionCharts from "./Charts/RepartitionCharts";
-import { CompetitionStats, GlobalStats } from "../../types/stats";
-import { addPlusIfPositive, aggregateGlobalStats } from "../../lib/stats/utils";
+import { CompetitionStats, GlobalStats, PerformanceStats, ShameStats } from "../../types/stats";
+import { addPlusIfPositive, aggregateGlobalStats, aggregatePerformanceStats, aggregateShameStats } from "../../lib/stats/utils";
+import ProgressBar from "./Charts/ProgressBar";
+import PerformanceCharts from "./Charts/PerformanceCharts";
 
 type Props = {
     periodSelection: PeriodSelection,
@@ -24,10 +26,10 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
             let filteredStats: CompetitionStats[];
             switch(periodSelection.type) {
                 case PeriodType.global:
-                    filteredStats = statsPerCompetition;
+                    filteredStats = [...statsPerCompetition];
                     break;
                 case PeriodType.year:
-                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
+                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
                     break;
             }
             return [...filteredStats].sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
@@ -44,13 +46,13 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
         let filteredStats: CompetitionStats[];
         switch(periodSelection.type) {
             case PeriodType.global:
-                filteredStats = statsPerCompetition;
+                filteredStats = [...statsPerCompetition];
                 break;
             case PeriodType.year:
-                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
+                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
                 break;
             case PeriodType.competition:
-                filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name)
+                filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name);
                 break;
         }
         return [...filteredStats].sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
@@ -78,15 +80,42 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
             let filteredStats: CompetitionStats[];
             switch(periodSelection.type) {
                 case PeriodType.year:
-                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year)
+                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
                     break;
                 case PeriodType.competition:
-                    filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name)
+                    filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name);
                     break;
             }
             return aggregateGlobalStats(filteredStats);
         }
     }, [periodSelection, statsPerCompetition, globalStatistics]);
+
+    const shameStats: ShameStats = useMemo(() => {
+        let filteredStats: CompetitionStats[];
+        switch(periodSelection.type) {
+            case PeriodType.year:
+                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
+                break;
+            case PeriodType.global:
+                filteredStats = [...statsPerCompetition];
+                break;
+        }
+        return aggregateShameStats(filteredStats);
+    }, [periodSelection, statsPerCompetition]);
+
+    const performanceStats: PerformanceStats = useMemo(() => {
+        let filteredStats: CompetitionStats[];
+        switch(periodSelection.type) {
+            case PeriodType.year:
+                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
+                break;
+            case PeriodType.global:
+                filteredStats = [...statsPerCompetition];
+                break;
+        }
+        
+        return aggregatePerformanceStats(filteredStats);
+    }, [periodSelection, statsPerCompetition]);
 
     return (
         <>
@@ -118,7 +147,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                 <StatCard
                     label="Rounds"
                     value={globalStatistics.nbRounds.toString()}
-                    detail="comptabilisés"
+                    detail={`dont ${globalStatistics.nbFullStats} avec les stats avancées`}
                 />
             </section>
 
@@ -137,7 +166,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                                 description="Évolution du rating"
                                 icon={
                                     <svg
-                                        className="text-indigo-400 scale-80" fill="currentColor" height="200px" width="200px" version="1.1" id="Layer_1"
+                                        className="text-indigo-400 scale-70" fill="currentColor" height="200px" width="200px" version="1.1" id="Layer_1"
                                         xmlns="http://www.w3.org/2000/svg" viewBox="-45.5 -45.5 546.00 546.00" stroke="currentColor" strokeWidth="0.00455" transform="matrix(1, 0, 0, 1, 0, 0)rotate(0)">
                                         <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                                         <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" stroke="#CCCCCC" strokeWidth="7.279999999999999"></g>
@@ -155,7 +184,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             title={ ChartTypes.repartition }
                             description="Birdies, pars, bogeys..."
                             icon={
-                                <svg className="text-indigo-400 scale-80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="text-indigo-400 scale-70" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                                     <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
                                     <g id="SVGRepo_iconCarrier">
@@ -169,51 +198,71 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             active={activeStat === ChartTypes.competitionScore}
                             onClick={() => setActiveStat(ChartTypes.competitionScore)}
                             title={ ChartTypes.competitionScore }
-                            description="Performance par round"
+                            description="Statistiques des lancers"
                             icon={
-                                <svg className="text-indigo-400 scale-80" viewBox="-4.8 -4.8 33.60 33.60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="text-indigo-400 scale-80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
                                     <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
                                     <g id="SVGRepo_iconCarrier">
-                                        <path d="M2 12C2 11.4477 2.44772 11 3 11H21C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13H3C2.44772 13 2 12.5523 2 12Z" fill="currentColor"></path>
+                                        <path d="M12 3V7M12 17V21M3 12H7M17 12H21M12 12H12.01M19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" stroke="currentColor" stroke-width="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
                                     </g>
                                 </svg>
                             }
                         />
 
-                        <StatTab
-                            active={activeStat === ChartTypes.shame}
-                            onClick={() => setActiveStat(ChartTypes.shame)}
-                            title={ ChartTypes.shame }
-                            description="Meh"
-                            icon={
-                                <svg className="text-indigo-400 scale-80" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" 
-                                    width="28px" height="28px" fill="currentColor" viewBox="0 0 512 512">
-                                    <g>
-                                        <path d="M437.914,74.078C392.43,27,326.117,0,255.992,0C185.883,0,119.57,27,74.102,74.063
-                                            c-42.5,44-64.703,102.828-62.531,165.688l6.609,83.875c6.031,84.75,55.234,93.906,76.094,93.906c7.563,0,15.531-1.094,23.625-3.188
-                                            c1.094,7.938,1,21.859,0.922,32.688l-0.078,15.063c-0.141,10.938-0.359,27.5,11.234,39.234c4.797,4.875,13.563,10.672,28,10.672
-                                            h196.047c14.438,0,23.188-5.797,28-10.656c11.578-11.75,11.375-28.297,11.234-39.25l-0.094-15.031
-                                            c-0.063-10.844-0.172-24.781,0.938-32.719c8.172,2.109,16.094,3.188,23.625,3.188c20.859,0,70.047-9.156,76.094-93.75l6.563-83.156
-                                            l0.047-0.875C502.602,176.891,480.398,118.063,437.914,74.078z M459.961,237.906l-6.516,82.844
-                                            c-2.672,37.344-14.703,56.281-35.719,56.281c-4.844,0-10.266-0.891-16.297-2.688c-14.406-4.156-26.891-1.375-35.703,7.5
-                                            c-13.406,13.5-13.266,35.313-13.047,65.5l0.078,15.281c0.031,2.5,0.078,6.188-0.141,8.875h-42.75v-50.016h-32.406V471.5h-42.938
-                                            v-50.016h-32.391V471.5h-42.766c-0.203-2.688-0.156-6.375-0.125-8.906l0.078-15.297c0.219-30.156,0.359-51.953-13.047-65.453
-                                            c-8.766-8.844-20.953-11.75-35.875-7.453c-5.859,1.75-11.281,2.641-16.125,2.641c-21.031,0-33.031-18.938-35.719-56.438
-                                            l-6.531-82.688c-1.656-51.609,16.5-99.781,51.203-135.688C141.117,63,196.805,40.5,255.992,40.5
-                                            c59.203,0,114.891,22.5,152.781,61.719C443.477,138.125,461.648,186.297,459.961,237.906z"/>
-                                        <path d="M256.008,309.656c-9.719,0-31.125,46.688-35.031,54.469c-3.875,7.781,3.906,19.469,15.578,15.563
-                                            c11.672-3.875,19.453-13.609,19.453-13.609s7.781,9.734,19.453,13.609c11.656,3.906,19.453-7.781,15.563-15.563
-                                            C287.117,356.344,265.742,309.656,256.008,309.656z"/>
-                                        <path d="M171.586,183.281c-30.891-3.25-58.578,19.188-61.828,50.094l-4.188,29.422
-                                            c-3.25,30.922,19.188,58.578,50.078,61.828c30.922,3.25,58.609-19.172,61.844-50.094l4.188-29.422
-                                            C224.914,214.188,202.508,186.531,171.586,183.281z"/>
-                                        <path d="M402.242,233.375c-3.234-30.906-30.938-53.344-61.828-50.094c-30.922,3.25-53.328,30.906-50.094,61.828
-                                            l4.172,29.422c3.25,30.922,30.938,53.344,61.844,50.094s53.344-30.906,50.094-61.828L402.242,233.375z"/>
-                                    </g>
-                                </svg>
-                            }
-                        />
+                        { [PeriodType.global, PeriodType.year].includes(periodSelection.type) && (
+                            <StatTab
+                                active={activeStat === ChartTypes.performance}
+                                onClick={() => setActiveStat(ChartTypes.performance)}
+                                title={ ChartTypes.performance }
+                                description=""
+                                icon={
+                                    <svg className="text-indigo-400 scale-70" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path d="M20.1691 10.2177C20.7024 11.3675 21 12.649 21 13.9999C21 15.4684 20.6483 16.8547 20.0245 18.0793C19.7216 18.674 19.0839 18.9999 18.4165 18.9999H5.58351C4.91613 18.9999 4.27839 18.674 3.97547 18.0793C3.3517 16.8547 3 15.4684 3 13.9999C3 9.02931 7.02944 4.99988 12 4.99988C13.3231 4.99988 14.5795 5.28539 15.711 5.79817M12.7071 13.2929C12.3166 12.9024 11.6834 12.9024 11.2929 13.2929C10.9024 13.6834 10.9024 14.3166 11.2929 14.7071C11.6834 15.0976 12.3166 15.0976 12.7071 14.7071C13.0976 14.3166 13.0976 13.6834 12.7071 13.2929ZM12.7071 13.2929L19.0711 6.92893" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"></path>
+                                        </g>
+                                    </svg>
+                                }
+                            />
+                        )}
+
+                        { [PeriodType.global, PeriodType.year].includes(periodSelection.type) && (
+                            <StatTab
+                                active={activeStat === ChartTypes.shame}
+                                onClick={() => setActiveStat(ChartTypes.shame)}
+                                title={ ChartTypes.shame }
+                                description="Meh"
+                                icon={
+                                    <svg className="text-indigo-400 scale-80" version="1.1" id="_x32_" xmlns="http://www.w3.org/2000/svg" 
+                                        width="28px" height="28px" fill="currentColor" viewBox="0 0 512 512">
+                                        <g>
+                                            <path d="M437.914,74.078C392.43,27,326.117,0,255.992,0C185.883,0,119.57,27,74.102,74.063
+                                                c-42.5,44-64.703,102.828-62.531,165.688l6.609,83.875c6.031,84.75,55.234,93.906,76.094,93.906c7.563,0,15.531-1.094,23.625-3.188
+                                                c1.094,7.938,1,21.859,0.922,32.688l-0.078,15.063c-0.141,10.938-0.359,27.5,11.234,39.234c4.797,4.875,13.563,10.672,28,10.672
+                                                h196.047c14.438,0,23.188-5.797,28-10.656c11.578-11.75,11.375-28.297,11.234-39.25l-0.094-15.031
+                                                c-0.063-10.844-0.172-24.781,0.938-32.719c8.172,2.109,16.094,3.188,23.625,3.188c20.859,0,70.047-9.156,76.094-93.75l6.563-83.156
+                                                l0.047-0.875C502.602,176.891,480.398,118.063,437.914,74.078z M459.961,237.906l-6.516,82.844
+                                                c-2.672,37.344-14.703,56.281-35.719,56.281c-4.844,0-10.266-0.891-16.297-2.688c-14.406-4.156-26.891-1.375-35.703,7.5
+                                                c-13.406,13.5-13.266,35.313-13.047,65.5l0.078,15.281c0.031,2.5,0.078,6.188-0.141,8.875h-42.75v-50.016h-32.406V471.5h-42.938
+                                                v-50.016h-32.391V471.5h-42.766c-0.203-2.688-0.156-6.375-0.125-8.906l0.078-15.297c0.219-30.156,0.359-51.953-13.047-65.453
+                                                c-8.766-8.844-20.953-11.75-35.875-7.453c-5.859,1.75-11.281,2.641-16.125,2.641c-21.031,0-33.031-18.938-35.719-56.438
+                                                l-6.531-82.688c-1.656-51.609,16.5-99.781,51.203-135.688C141.117,63,196.805,40.5,255.992,40.5
+                                                c59.203,0,114.891,22.5,152.781,61.719C443.477,138.125,461.648,186.297,459.961,237.906z"/>
+                                            <path d="M256.008,309.656c-9.719,0-31.125,46.688-35.031,54.469c-3.875,7.781,3.906,19.469,15.578,15.563
+                                                c11.672-3.875,19.453-13.609,19.453-13.609s7.781,9.734,19.453,13.609c11.656,3.906,19.453-7.781,15.563-15.563
+                                                C287.117,356.344,265.742,309.656,256.008,309.656z"/>
+                                            <path d="M171.586,183.281c-30.891-3.25-58.578,19.188-61.828,50.094l-4.188,29.422
+                                                c-3.25,30.922,19.188,58.578,50.078,61.828c30.922,3.25,58.609-19.172,61.844-50.094l4.188-29.422
+                                                C224.914,214.188,202.508,186.531,171.586,183.281z"/>
+                                            <path d="M402.242,233.375c-3.234-30.906-30.938-53.344-61.828-50.094c-30.922,3.25-53.328,30.906-50.094,61.828
+                                                l4.172,29.422c3.25,30.922,30.938,53.344,61.844,50.094s53.344-30.906,50.094-61.828L402.242,233.375z"/>
+                                        </g>
+                                    </svg>
+                                }
+                            />
+                        )}
                     </nav>
 
                     <div className="min-w-0 flex-1 p-5 sm:p-7">
@@ -241,7 +290,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.competitionScore }
-                                    description="Visualisez rapidement la performance de chaque round."
+                                    description="Statistiques de chaque lancers"
                                 />
                                 <CompetitionScoreCharts
                                     globalStats={filteredGlobalStats}
@@ -249,13 +298,23 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             </div>
                         )}
 
+                        {activeStat === ChartTypes.performance && (
+                            <div>
+                                <ChartHeader
+                                    title={ ChartTypes.performance }
+                                    description=""
+                                />
+                                <PerformanceCharts stats={performanceStats}></PerformanceCharts>
+                            </div>
+                        )}
+
                         {activeStat === ChartTypes.shame && (
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.shame }
-                                    description="Les stats où vous ne serez pas très fier."
+                                    description="Les stats dont vous ne serez pas très fier."
                                 />
-                                <ShameCharts></ShameCharts>
+                                <ShameCharts stats={shameStats} nbFullStats={globalStatistics.nbFullStats}></ShameCharts>
                             </div>
                         )}
                     </div>
@@ -265,14 +324,21 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
     );
 }
 
-function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+export function StatCard({ label, value, detail, progressbar = null }: { label: string; value: string; detail: string; progressbar?: {color: string, height: string} }) {
     return (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
             <p className="text-sm text-slate-400">{label}</p>
 
-            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-100">
+            <p className="mt-2 mb-1 text-2xl font-bold tracking-tight text-slate-100">
                 {value}
             </p>
+            {progressbar && (
+                <ProgressBar
+                    data={[{value: parseFloat(value), total: 100, color: progressbar.color, name: label}]}
+                    showPercent={false}
+                    height={progressbar.height}
+                ></ProgressBar>
+            )}
 
             <p className="mt-1 text-xs text-slate-500">{detail}</p>
         </div>
@@ -284,7 +350,7 @@ function StatTab({ active, onClick, title, description, icon }: { active: boolea
         <button
             type="button"
             onClick={onClick}
-            className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
+            className={`mb-1 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition cursor-pointer ${
                 active
                     ? "bg-indigo-500/10 text-indigo-300"
                     : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"

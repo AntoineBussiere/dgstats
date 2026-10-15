@@ -37,7 +37,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
 
         async function loadStats() {
             // const stats = await getStats(selectedPlayer.pdgaNumber, selectedPlayer.competitions);
-            setStatistics(morgStats);
+            setStatistics(stats);
             console.log(stats);
         }
 

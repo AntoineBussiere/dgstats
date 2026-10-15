@@ -26,7 +26,7 @@ export default function RepartitionCharts({scoreDistribution}: Props) {
     }
 
     return (
-        <div className="mt-8 h-90 w-full">
+        <div className="mt-8 h-110 w-full">
             <ResponsiveContainer
                 width="100%"
                 height="100%"
@@ -83,6 +83,7 @@ export default function RepartitionCharts({scoreDistribution}: Props) {
                         name="Eagle"
                         stackId="score"
                         fill={EAGLE_COLOR}
+                        isAnimationActive={false}
                     />
 
                     <Bar
@@ -90,6 +91,7 @@ export default function RepartitionCharts({scoreDistribution}: Props) {
                         name="Birdie"
                         stackId="score"
                         fill={BIRDIE_COLOR}
+                        isAnimationActive={false}
                     />
 
                     <Bar
@@ -97,6 +99,7 @@ export default function RepartitionCharts({scoreDistribution}: Props) {
                         name="Par"
                         stackId="score"
                         fill={PAR_COLOR}
+                        isAnimationActive={false}
                     />
 
                     <Bar
@@ -104,6 +107,7 @@ export default function RepartitionCharts({scoreDistribution}: Props) {
                         name="Bogey"
                         stackId="score"
                         fill={BOGEY_COLOR}
+                        isAnimationActive={false}
                     />
 
                     <Bar
@@ -111,6 +115,7 @@ export default function RepartitionCharts({scoreDistribution}: Props) {
                         name="Double bogey+"
                         stackId="score"
                         fill={DBOGEY_COLOR}
+                        isAnimationActive={false}
                     />
                 </BarChart>
             </ResponsiveContainer>

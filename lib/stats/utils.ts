@@ -1,10 +1,10 @@
-import { BIRDIE_COLOR } from "../../assets/colors.ts";
-import { ProgressBarItem } from "../../types/progressbar.ts";
-import { BetterStats, CompetitionStats, GlobalStats } from "../../types/stats.ts";
+import { RoundStats, CompetitionStats, GlobalStats, ShameStats, PerformanceStats } from "../../types/stats.ts";
 
-export function aggregateStats(stats: Array<BetterStats>): BetterStats {
+export function aggregateStats(stats: Array<RoundStats>): RoundStats {
     const result = stats.reduce(
         (acc, obj) => ({
+            fairwaysuccess: acc.fairwaysuccess + obj.fairwaysuccess,
+            fairwaytotal: acc.fairwaytotal + obj.fairwaytotal,
             c1xsuccess: acc.c1xsuccess + obj.c1xsuccess,
             c1xtotal: acc.c1xtotal + obj.c1xtotal,
             c2success: acc.c2success + obj.c2success,
@@ -29,9 +29,18 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
             roundRatingCount: acc.roundRatingCount + 1,
             nbRounds: acc.nbRounds + 1,
             totalScore: obj.totalScore,
-            bestRound: Math.min(acc.bestRound, obj.bestRound)
+            bestRound: Math.min(acc.bestRound, obj.bestRound),
+            worstRound: Math.max(acc.worstRound, obj.worstRound),
+            bestRoundRating: Math.max(acc.bestRoundRating, obj.roundRating),
+            worstRoundRating: Math.min(acc.worstRoundRating, obj.roundRating),
+            worstScore: Math.max(acc.worstScore, obj.worstScore),
+            tied: obj.tied,
+            position: obj.position,
+            nbFullStats: acc.nbFullStats + obj.nbFullStats
         }),
         {
+            fairwaysuccess: 0,
+            fairwaytotal: 0,
             c1xsuccess: 0,
             c1xtotal: 0,
             c2success: 0,
@@ -56,11 +65,21 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
             roundRatingCount: 0,
             nbRounds: 0,
             totalScore: 0,
-            bestRound: 999
+            bestRound: Infinity,
+            worstRound: -Infinity,
+            bestRoundRating: 0,
+            worstRoundRating: Infinity,
+            worstScore: -Infinity,
+            tied: false,
+            position: Infinity,
+            nbFullStats: 0
         }
     );
 
     const averageRoundRating = result.roundRatingCount > 0 ? result.roundRatingSum / result.roundRatingCount : 0;
+    delete result.roundRatingCount;
+    delete result.roundRatingSum;
+
     return {
         ...result,
         roundRating: Math.round(averageRoundRating)
@@ -71,6 +90,8 @@ export function aggregateStats(stats: Array<BetterStats>): BetterStats {
 export function aggregateGlobalStats(stats: CompetitionStats[]): GlobalStats {
     const aggregate = stats.reduce(
         (acc, obj) => ({
+            fairwaysuccess: acc.fairwaysuccess + obj.stats.fairwaysuccess,
+            fairwaytotal: acc.fairwaytotal + obj.stats.fairwaytotal,
             c1xsuccess: acc.c1xsuccess + obj.stats.c1xsuccess,
             c1xtotal: acc.c1xtotal + obj.stats.c1xtotal,
             c2success: acc.c2success + obj.stats.c2success,
@@ -98,10 +119,17 @@ export function aggregateGlobalStats(stats: CompetitionStats[]): GlobalStats {
             totalScoreSum: acc.totalScoreSum + obj.stats.totalScore,
             totalScoreRounds: acc.totalScoreRounds + obj.stats.nbRounds,
 
-            bestRound: Math.min(acc.bestRound, obj.stats.bestRound)
+            bestRound: Math.min(acc.bestRound, obj.stats.bestRound),
+            worstRound: Math.max(acc.worstRound, obj.stats.worstRound),
+            worstScore: Math.max(acc.worstScore, obj.stats.worstScore),
+            tied: obj.stats.tied,
+            position: obj.stats.position,
+            nbFullStats: acc.nbFullStats + obj.stats.nbFullStats
         }),
         {
+            fairwaysuccess: 0,
             c1xsuccess: 0,
+            fairwaytotal: 0,
             c1xtotal: 0,
             c2success: 0,
             c2total: 0,
@@ -125,7 +153,12 @@ export function aggregateGlobalStats(stats: CompetitionStats[]): GlobalStats {
             totalScoreSum: 0,
             totalScoreRounds: 0,
 
-            bestRound: Infinity
+            bestRound: Infinity,
+            worstRound: -Infinity,
+            worstScore: -Infinity,
+            tied: false,
+            position: Infinity,
+            nbFullStats: 0
         }
     );
 
@@ -142,4 +175,60 @@ export function aggregateGlobalStats(stats: CompetitionStats[]): GlobalStats {
 
 export function addPlusIfPositive(score: number): string {
     return (score > 0 ? '+' : '') + score;
+}
+
+
+export function aggregateShameStats(stats: CompetitionStats[]): ShameStats {
+    const result = stats.reduce(
+        (acc, obj) => ({
+            worstScore: Math.max(acc.worstScore, obj.stats.worstScore),
+            nbPenalties: acc.nbPenalties + obj.stats.nbHazard + obj.stats.nbOB + obj.stats.nbMissMando,
+            nbCompetitions: acc.nbCompetitions + 1,
+            nbBogey: acc.nbBogey + obj.stats.nbBogey,
+            nbDouble: acc.nbDouble + obj.stats.nbDBogeyPlus,
+            nbBirdie: acc.nbBirdie + obj.stats.nbBirdie,
+            nbHole: acc.nbHole + obj.stats.nbEagle + obj.stats.nbBirdie + obj.stats.nbPar + obj.stats.nbBogey + obj.stats.nbDBogeyPlus,
+            nbFailedC1: acc.nbFailedC1 + obj.stats.c1xtotal - obj.stats.c1xsuccess
+        }),
+        {
+            worstScore: -Infinity,
+            nbPenalties: 0,
+            nbCompetitions: 0,
+            nbBogey: 0,
+            nbDouble: 0,
+            nbBirdie: 0,
+            nbHole: 0,
+            nbFailedC1: 0
+        }
+    );
+
+    return result;
+}
+
+export function aggregatePerformanceStats(stats: CompetitionStats[]): PerformanceStats {
+    const result = stats.reduce(
+        (acc, obj) => ({
+            top25total: acc.top25total + (((obj.stats.position + (obj.stats.tied ? 1 : 0)) / obj.nbPlayers) <= 0.25 ? 1 : 0) * 100,
+            betterThanTotal: acc.betterThanTotal + Math.round(((obj.nbPlayers - ((obj.stats.position + (obj.stats.tied ? 1 : 0)))) / obj.nbPlayers) * 100 * 100) / 100,
+            biggestRatingDifference: Math.max(acc.biggestRatingDifference, obj.stats.bestRoundRating - obj.stats.worstRoundRating)
+        }),
+        {
+            top25total: 0,
+            betterThanTotal: 0,
+            biggestRatingDifference: 0
+        }
+    );
+    
+    const ratings = stats.map(x => x.stats.roundRating);
+    const average = ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length;
+    const standardDeviation = Math.sqrt(
+        ratings.reduce((sum, rating) => sum + (rating - average) ** 2, 0) / ratings.length
+    );
+
+    return {
+        top25: Math.round(result.top25total / stats.length * 10) / 10,
+        betterThan: Math.round(result.betterThanTotal / stats.length * 10) / 10,
+        biggestRatingDifference: result.biggestRatingDifference,
+        ratingStandardDeviation: Math.round(standardDeviation)
+    };
 }

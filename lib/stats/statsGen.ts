@@ -1,19 +1,24 @@
-import { getAPIHoleStats, getAPIStats, getCompetition } from "./api.ts";
-import { BetterStats, HoleStats, Stats } from "../../types/stats.ts";
+import { getAPIStats, getCompetition, getCompetitionResult, getCompetitionRoundStat } from "./api.ts";
+import { RoundStats, Stats } from "../../types/stats.ts";
+import { RoundStatDTO, Score } from "../../types/competition.ts";
 
-function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, rating: number, roundRating: number, totalScore: number, bestRound: number): BetterStats {
-    const score = s.split(",").filter(value => value !== "").map(Number);
-    const par = p.split(",").filter(value => value !== "").slice(0, score.length).map(Number);
+function genStats(stats: Stats[], scoreData: Score, roundStat: RoundStatDTO[]): RoundStats {
+    const score = scoreData.Scores.split(",").filter(value => value !== "").map(Number);
+    const par = scoreData.Pars.split(",").filter(value => value !== "").slice(0, score.length).map(Number);
+    const totalScore = scoreData.ParThruRound;
+    const bestRound = scoreData.RoundtoPar;
+    const worstRound = scoreData.RoundtoPar;
 
     let nbEagle = 0;
     let nbBirdie = 0;
     let nbPar = 0;
     let nbBogey = 0;
     let nbDBogeyPlus = 0;
+    let worstScore = -Infinity;
 
     for (let i = 0; i < score.length; i++) {
-        const a = score[i];
-        const b = par[i];
+        const a = score[i];     // 4
+        const b = par[i];       // 3
         if (a && b) {
             if (a === b - 2) {
                 nbEagle++;
@@ -26,75 +31,48 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
             } else {
                 nbDBogeyPlus++;
             }
+
+            if (a - b > worstScore) {
+                worstScore = a - b;
+            }
         }
     }
 
-    let c1xsuccess = 0;
-    let c1xtotal = 0;
-    let c2success = 0;
-    let c2total = 0;
-    let scramblesuccess = 0;
-    let scrambletotal = 0;
-    let c1rsuccess = 0;
-    let c1rtotal = 0;
-    let c2rsuccess = 0;
-    let c2rtotal = 0;
     let nbOB = 0;
     let nbHazard = 0;
     let nbMissMando = 0;
     let longestPutt = 0;
+    let nbFullStats = 0;
+    
+    for (let stat of stats) {
+        if (stat.holeBreakdown) {
+            nbOB += stat.holeBreakdown.ob;
+            nbHazard += stat.holeBreakdown.hazard;
+            nbMissMando += stat.holeBreakdown.missedMando;
 
-    if (holeStats) {
-        for (let i = 0; i < stats.length; i++) {
-            const stat = stats[i];
-            const holeStat = holeStats.scoreThrows[i];
-            if (stat && holeStat) {
-                // C1X
-                c1xsuccess += stat.holeBreakdown.throwIn > 10 && stat.holeBreakdown.c1x ? 1 : 0;    // 10ft ~= 3m
-                c1xtotal += stat.holeBreakdown.c1x;
-    
-                // C2
-                c2success += stat.holeBreakdown.throwIn > 30 && stat.holeBreakdown.c2 ? 1 : 0;      // 30ft ~= 10m
-                c2total += stat.holeBreakdown.c2;
-    
-                // SCRAMBLE
-                scramblesuccess += stat.holeBreakdown.scramble === "success" ? 1 : 0;
-                scrambletotal += stat.holeBreakdown.scramble !== "" ? 1 : 0;
-    
-                // C1 reg
-                const regulationThrow = holeStat.holeThrows[holeStat.liveLayoutDetail.par - 3];
-                c1rsuccess += regulationThrow?.liveScoreThrow.zoneId === 3 || regulationThrow?.liveScoreThrow.zoneId === 5 ? 1 : 0;
-                c1rtotal += 1;
-    
-                // C2 reg
-                c2rsuccess += [3, 4, 5].includes(
-                    holeStat.holeThrows[holeStat.liveLayoutDetail.par - 3]?.liveScoreThrow.zoneId ?? -1
-                ) ? 1 : 0;
-                c2rtotal += 1;
-                
-                nbOB += stat.holeBreakdown.ob;
-                nbHazard += stat.holeBreakdown.hazard;
-                nbMissMando += stat.holeBreakdown.missedMando;
-    
-                longestPutt = stat.holeBreakdown.throwIn > longestPutt ? stat.holeBreakdown.throwIn : longestPutt;
-            }
+            longestPutt = stat.holeBreakdown.throwIn > longestPutt ? stat.holeBreakdown.throwIn : longestPutt;
+
+            nbFullStats++;
         }
-    
-        longestPutt = Math.round(longestPutt * 0.3048);
     }
+
+    longestPutt = Math.round(longestPutt * 0.3048);
+    
 
 
     return {
-        c1xsuccess,
-        c1xtotal,
-        c2success,
-        c2total,
-        scramblesuccess,
-        scrambletotal,
-        c1rsuccess,
-        c1rtotal,
-        c2rsuccess,
-        c2rtotal,
+        fairwaysuccess:roundStat[0].statCount,
+        fairwaytotal: roundStat[0].statOpportunityCount,
+        c1xsuccess: roundStat[6].statCount,
+        c1xtotal: roundStat[6].statOpportunityCount,
+        c2success: roundStat[7].statCount,
+        c2total: roundStat[7].statOpportunityCount,
+        scramblesuccess: roundStat[4].statCount,
+        scrambletotal: roundStat[4].statOpportunityCount,
+        c1rsuccess: roundStat[1].statCount,
+        c1rtotal: roundStat[1].statOpportunityCount,
+        c2rsuccess: roundStat[2].statCount,
+        c2rtotal: roundStat[2].statOpportunityCount,
         nbOB,
         nbHazard,
         nbMissMando,
@@ -104,44 +82,43 @@ function genStats(stats: Stats[], s: string, p: string, holeStats: HoleStats, ra
         nbPar,
         nbBogey,
         nbDBogeyPlus,
-        rating,
-        roundRating,
+        rating: scoreData.Rating,
+        roundRating: scoreData.RoundRating,
         totalScore,
-        bestRound
+        bestRound,
+        worstRound,
+        worstScore,
+        tied: scoreData.Tied,
+        position: scoreData.RunningPlace,
+        nbFullStats
     }
 }
 
-export async function getRoundStats(competitionId: number, division: string, round: number, PDGANum: number): Promise<BetterStats | null> {
+export async function getRoundStats(competitionId: number, division: string, round: number, PDGANum: number): Promise<RoundStats | null> {
     const competition = await getCompetition(competitionId, division, round);
 
     const score = competition.data.scores.find(
         x => x.PDGANum === PDGANum
     );
 
+    const competitionResult = await getCompetitionResult(score.ResultID);
+    
+    const roundStat = await getCompetitionRoundStat(competitionResult.playerRounds[round - 1]?.liveScore.scoreId);
+
     if (!score) {
         return null;
     }
 
     const stats = await getAPIStats(score.ScoreID);
-    let holeStats: HoleStats;
 
-    if (stats[0]?.holeBreakdown) {
-        holeStats = await getAPIHoleStats(score.ScoreID);
-    }
-
-    return genStats(stats, score.Scores, score.Pars, holeStats, score.Rating, score.RoundRating, score.ParThruRound, score.RoundtoPar);
+    return genStats(stats, score, roundStat);
 }
 
-export async function getCompetitionStats(competitionId: number, division: string, playerId: number): Promise<BetterStats[]> {
-    const firstRound = await getCompetition(competitionId, division, 1);
-
-    const nbRounds = firstRound.data.scores[0]?.Rounds.split(",").filter(value => value !== "").map(Number).length ?? 0;
-
-    const roundStats: BetterStats[] = [];
+export async function getCompetitionStats(competitionId: number, division: string, playerId: number, nbRounds: number): Promise<RoundStats[]> {
+    const roundStats: RoundStats[] = [];
 
     for (let round = 1; round <= nbRounds; round++) {
         const stats = await getRoundStats(competitionId, division, round, playerId);
-
         if (stats) {
             roundStats.push(stats);
         }

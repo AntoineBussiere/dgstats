@@ -1,5 +1,5 @@
 export type ProgressBarItem = {
-    name: string;
+    name?: string;
     value: number;
     total: number;
     color: string;
