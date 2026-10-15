@@ -5,12 +5,13 @@ import { ChartTypes } from "../../types/charts";
 import ShameCharts from "./Charts/ShameCharts";
 import CompetitionScoreCharts from "./Charts/CompetitionScoreChart";
 import ProgressionChart from "./Charts/ProgressionChart";
-import { PeriodSelection, PeriodType } from "../../types/period";
+import { allowedGraphsByPeriod, PeriodSelection, PeriodType } from "../../types/period";
 import RepartitionCharts from "./Charts/RepartitionCharts";
 import { CompetitionStats, GlobalStats, PerformanceStats, ShameStats } from "../../types/stats";
 import { addPlusIfPositive, aggregateGlobalStats, aggregatePerformanceStats, aggregateShameStats } from "../../lib/stats/utils";
 import ProgressBar from "./Charts/ProgressBar";
 import PerformanceCharts from "./Charts/PerformanceCharts";
+import { isGraphAllowed } from "../../lib/period";
 
 type Props = {
     periodSelection: PeriodSelection,
@@ -21,8 +22,11 @@ type Props = {
 export default function Statistics({ periodSelection, globalStatistics, statsPerCompetition }: Props) {
     const [activeStat, setActiveStat] = useState(ChartTypes.progression);
 
+    const allowedGraphs = allowedGraphsByPeriod[periodSelection.type];
+    const activeGraph = allowedGraphs.includes(activeStat) ? activeStat : allowedGraphs[0];
+
     const progressionData = useMemo(() => {
-        if ([PeriodType.global, PeriodType.year].includes(periodSelection.type)) {
+        if (isGraphAllowed(ChartTypes.progression, periodSelection)) {
             let filteredStats: CompetitionStats[];
             switch(periodSelection.type) {
                 case PeriodType.global:
@@ -55,6 +59,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                 filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name);
                 break;
         }
+        
         return [...filteredStats].sort((a, b) => new Date(a.competitionDate).getTime() - new Date(b.competitionDate).getTime()).map(x => {
             const nbHole = x.stats.nbEagle + x.stats.nbBirdie + x.stats.nbPar + x.stats.nbBogey + x.stats.nbDBogeyPlus;
             return {
@@ -75,7 +80,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
 
     const filteredGlobalStats: GlobalStats = useMemo(() => {
         if (periodSelection.type === PeriodType.global) {
-            return globalStatistics;
+            return {...globalStatistics};
         } else {
             let filteredStats: CompetitionStats[];
             switch(periodSelection.type) {
@@ -91,30 +96,34 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
     }, [periodSelection, statsPerCompetition, globalStatistics]);
 
     const shameStats: ShameStats = useMemo(() => {
-        let filteredStats: CompetitionStats[];
-        switch(periodSelection.type) {
-            case PeriodType.year:
-                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
-                break;
-            case PeriodType.global:
-                filteredStats = [...statsPerCompetition];
-                break;
+        if (isGraphAllowed(ChartTypes.shame, periodSelection)) {
+            let filteredStats: CompetitionStats[];
+            switch(periodSelection.type) {
+                case PeriodType.year:
+                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
+                    break;
+                case PeriodType.global:
+                    filteredStats = [...statsPerCompetition];
+                    break;
+            }
+            return aggregateShameStats(filteredStats);
         }
-        return aggregateShameStats(filteredStats);
     }, [periodSelection, statsPerCompetition]);
 
     const performanceStats: PerformanceStats = useMemo(() => {
-        let filteredStats: CompetitionStats[];
-        switch(periodSelection.type) {
-            case PeriodType.year:
-                filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
-                break;
-            case PeriodType.global:
-                filteredStats = [...statsPerCompetition];
-                break;
+        if (isGraphAllowed(ChartTypes.performance, periodSelection)) {
+            let filteredStats: CompetitionStats[];
+            switch(periodSelection.type) {
+                case PeriodType.year:
+                    filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
+                    break;
+                case PeriodType.global:
+                    filteredStats = [...statsPerCompetition];
+                    break;
+            }
+            
+            return aggregatePerformanceStats(filteredStats);
         }
-        
-        return aggregatePerformanceStats(filteredStats);
     }, [periodSelection, statsPerCompetition]);
 
     return (
@@ -158,9 +167,9 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             Statistiques
                         </p>
 
-                        { [PeriodType.global, PeriodType.year].includes(periodSelection.type) && (
+                        { isGraphAllowed(ChartTypes.progression, periodSelection) && (
                             <StatTab
-                                active={ activeStat === ChartTypes.progression }
+                                active={ activeGraph === ChartTypes.progression }
                                 onClick={() => setActiveStat(ChartTypes.progression)}
                                 title={ ChartTypes.progression }
                                 description="Évolution du rating"
@@ -178,41 +187,45 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             />
                         )}
 
-                        <StatTab
-                            active={ activeStat === ChartTypes.repartition }
-                            onClick={() => setActiveStat(ChartTypes.repartition)}
-                            title={ ChartTypes.repartition }
-                            description="Birdies, pars, bogeys..."
-                            icon={
-                                <svg className="text-indigo-400 scale-70" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                                    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path d="M15 5V10M9 14V19M4.6 10H19.4C19.9601 10 20.2401 10 20.454 9.89101C20.6422 9.79513 20.7951 9.64215 20.891 9.45399C21 9.24008 21 8.96005 21 8.4V6.6C21 6.03995 21 5.75992 20.891 5.54601C20.7951 5.35785 20.6422 5.20487 20.454 5.10899C20.2401 5 19.9601 5 19.4 5H4.6C4.03995 5 3.75992 5 3.54601 5.10899C3.35785 5.20487 3.20487 5.35785 3.10899 5.54601C3 5.75992 3 6.03995 3 6.6V8.4C3 8.96005 3 9.24008 3.10899 9.45399C3.20487 9.64215 3.35785 9.79513 3.54601 9.89101C3.75992 10 4.03995 10 4.6 10ZM4.6 19H19.4C19.9601 19 20.2401 19 20.454 18.891C20.6422 18.7951 20.7951 18.6422 20.891 18.454C21 18.2401 21 17.9601 21 17.4V15.6C21 15.0399 21 14.7599 20.891 14.546C20.7951 14.3578 20.6422 14.2049 20.454 14.109C20.2401 14 19.9601 14 19.4 14H4.6C4.03995 14 3.75992 14 3.54601 14.109C3.35785 14.2049 3.20487 14.3578 3.10899 14.546C3 14.7599 3 15.0399 3 15.6V17.4C3 17.9601 3 18.2401 3.10899 18.454C3.20487 18.6422 3.35785 18.7951 3.54601 18.891C3.75992 19 4.03995 19 4.6 19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                                    </g>
-                                </svg>
-                            }
-                        />
-
-                        <StatTab
-                            active={activeStat === ChartTypes.competitionScore}
-                            onClick={() => setActiveStat(ChartTypes.competitionScore)}
-                            title={ ChartTypes.competitionScore }
-                            description="Statistiques des lancers"
-                            icon={
-                                <svg className="text-indigo-400 scale-80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
-                                    <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
-                                    <g id="SVGRepo_iconCarrier">
-                                        <path d="M12 3V7M12 17V21M3 12H7M17 12H21M12 12H12.01M19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                                    </g>
-                                </svg>
-                            }
-                        />
-
-                        { [PeriodType.global, PeriodType.year].includes(periodSelection.type) && (
+                        { isGraphAllowed(ChartTypes.repartition, periodSelection) && (
                             <StatTab
-                                active={activeStat === ChartTypes.performance}
+                                active={ activeGraph === ChartTypes.repartition }
+                                onClick={() => setActiveStat(ChartTypes.repartition)}
+                                title={ ChartTypes.repartition }
+                                description="Birdies, pars, bogeys..."
+                                icon={
+                                    <svg className="text-indigo-400 scale-70" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path d="M15 5V10M9 14V19M4.6 10H19.4C19.9601 10 20.2401 10 20.454 9.89101C20.6422 9.79513 20.7951 9.64215 20.891 9.45399C21 9.24008 21 8.96005 21 8.4V6.6C21 6.03995 21 5.75992 20.891 5.54601C20.7951 5.35785 20.6422 5.20487 20.454 5.10899C20.2401 5 19.9601 5 19.4 5H4.6C4.03995 5 3.75992 5 3.54601 5.10899C3.35785 5.20487 3.20487 5.35785 3.10899 5.54601C3 5.75992 3 6.03995 3 6.6V8.4C3 8.96005 3 9.24008 3.10899 9.45399C3.20487 9.64215 3.35785 9.79513 3.54601 9.89101C3.75992 10 4.03995 10 4.6 10ZM4.6 19H19.4C19.9601 19 20.2401 19 20.454 18.891C20.6422 18.7951 20.7951 18.6422 20.891 18.454C21 18.2401 21 17.9601 21 17.4V15.6C21 15.0399 21 14.7599 20.891 14.546C20.7951 14.3578 20.6422 14.2049 20.454 14.109C20.2401 14 19.9601 14 19.4 14H4.6C4.03995 14 3.75992 14 3.54601 14.109C3.35785 14.2049 3.20487 14.3578 3.10899 14.546C3 14.7599 3 15.0399 3 15.6V17.4C3 17.9601 3 18.2401 3.10899 18.454C3.20487 18.6422 3.35785 18.7951 3.54601 18.891C3.75992 19 4.03995 19 4.6 19Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                                        </g>
+                                    </svg>
+                                }
+                            />
+                        )}
+
+                        { isGraphAllowed(ChartTypes.competitionScore, periodSelection) && (
+                            <StatTab
+                                active={activeGraph === ChartTypes.competitionScore}
+                                onClick={() => setActiveStat(ChartTypes.competitionScore)}
+                                title={ ChartTypes.competitionScore }
+                                description="Statistiques des lancers"
+                                icon={
+                                    <svg className="text-indigo-400 scale-80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                                        <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round"></g>
+                                        <g id="SVGRepo_iconCarrier">
+                                            <path d="M12 3V7M12 17V21M3 12H7M17 12H21M12 12H12.01M19 12C19 15.866 15.866 19 12 19C8.13401 19 5 15.866 5 12C5 8.13401 8.13401 5 12 5C15.866 5 19 8.13401 19 12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                                        </g>
+                                    </svg>
+                                }
+                            />
+                        )}
+
+                        { isGraphAllowed(ChartTypes.performance, periodSelection) && (
+                            <StatTab
+                                active={activeGraph === ChartTypes.performance}
                                 onClick={() => setActiveStat(ChartTypes.performance)}
                                 title={ ChartTypes.performance }
                                 description=""
@@ -228,9 +241,9 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             />
                         )}
 
-                        { [PeriodType.global, PeriodType.year].includes(periodSelection.type) && (
+                        { isGraphAllowed(ChartTypes.shame, periodSelection) && (
                             <StatTab
-                                active={activeStat === ChartTypes.shame}
+                                active={activeGraph === ChartTypes.shame}
                                 onClick={() => setActiveStat(ChartTypes.shame)}
                                 title={ ChartTypes.shame }
                                 description="Meh"
@@ -266,7 +279,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                     </nav>
 
                     <div className="min-w-0 flex-1 p-5 sm:p-7">
-                        {activeStat === ChartTypes.progression && (
+                        {activeGraph === ChartTypes.progression && (
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.progression }
@@ -276,7 +289,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             </div>
                         )}
 
-                        {activeStat === ChartTypes.repartition && (
+                        {activeGraph === ChartTypes.repartition && (
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.repartition }
@@ -286,7 +299,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             </div>
                         )}
 
-                        {activeStat === ChartTypes.competitionScore && (
+                        {activeGraph === ChartTypes.competitionScore && (
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.competitionScore }
@@ -298,7 +311,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             </div>
                         )}
 
-                        {activeStat === ChartTypes.performance && (
+                        {activeGraph === ChartTypes.performance && (
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.performance }
@@ -308,7 +321,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             </div>
                         )}
 
-                        {activeStat === ChartTypes.shame && (
+                        {activeGraph === ChartTypes.shame && (
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.shame }

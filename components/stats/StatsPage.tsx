@@ -39,7 +39,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
             setSelectedPlayer(initialPlayers[0]);
             localStorage.setItem("selectedPlayer", initialPlayers[0].pdgaNumber.toString());
         }
-    }, []);
+    }, [initialPlayers]);
 
     useEffect(() => {
         if (!selectedPlayer) {
