@@ -37,6 +37,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
             setSelectedPlayer(initialPlayers.find(x => x.pdgaNumber === Number(savedPdgaNumber)));
         } else {
             setSelectedPlayer(initialPlayers[0]);
+            localStorage.setItem("selectedPlayer", initialPlayers[0].pdgaNumber.toString());
         }
     }, []);
 
