@@ -17,11 +17,11 @@ import { aggregateGlobalStats } from "../../lib/stats/utils";
 export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
-    const [selectedPlayer, setSelectedPlayer] = useState<Player>(initialPlayers[0]);
+    const [selectedPlayer, setSelectedPlayer] = useState<Player>();
     const [statistics, setStatistics] = useState<CompetitionStats[]>([]);
 
     const availableYears = [
-        ...new Set(selectedPlayer.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
+        ...new Set(selectedPlayer?.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
     ].sort((a, b) => b - a);
     
 
@@ -29,6 +29,16 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
         () => aggregateGlobalStats(statistics),
         [statistics]
     );
+
+    useEffect(() => {
+        const savedPdgaNumber = localStorage.getItem("selectedPlayer");
+
+        if (savedPdgaNumber) {
+            setSelectedPlayer(initialPlayers.find(x => x.pdgaNumber === Number(savedPdgaNumber)));
+        } else {
+            setSelectedPlayer(initialPlayers[0]);
+        }
+    }, []);
 
     useEffect(() => {
         if (!selectedPlayer) {
@@ -108,38 +118,42 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                     </p>
                 </header>
 
-                <PlayerSelection
-                    players={players}
-                    selectedPlayer={selectedPlayer}
-                    onSelectedPlayer={(player: Player) => setSelectedPlayer(player)}
-                    onAddPlayer={(newPlayer: Player) => {
-                        setPlayers((current) => [
-                            ...current,
-                            newPlayer
-                        ]);
-                        setSelectedPlayer(newPlayer);
-                    }}
-                ></PlayerSelection>
+                {selectedPlayer && (
+                    <>
+                        <PlayerSelection
+                            players={players}
+                            selectedPlayer={selectedPlayer}
+                            onSelectedPlayer={(player: Player) => setSelectedPlayer(player)}
+                            onAddPlayer={(newPlayer: Player) => {
+                                setPlayers((current) => [
+                                    ...current,
+                                    newPlayer
+                                ]);
+                                setSelectedPlayer(newPlayer);
+                            }}
+                        ></PlayerSelection>
 
-                <Competitions
-                    competitions={selectedPlayer.competitions}
-                    onAddCompetition={addCompetition}
-                    onDeleteCompetition={deleteCompetition}
-                ></Competitions>
+                        <Competitions
+                            competitions={selectedPlayer.competitions}
+                            onAddCompetition={addCompetition}
+                            onDeleteCompetition={deleteCompetition}
+                        ></Competitions>
 
-                <Period
-                    availableYears={availableYears}
-                    competitions={selectedPlayer.competitions}
-                    selectedPlayer={selectedPlayer}
-                    selectedPeriod={periodSelection}
-                    onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
-                ></Period>
+                        <Period
+                            availableYears={availableYears}
+                            competitions={selectedPlayer.competitions}
+                            selectedPlayer={selectedPlayer}
+                            selectedPeriod={periodSelection}
+                            onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
+                        ></Period>
 
-                <Statistics
-                    periodSelection={periodSelection}
-                    globalStatistics={globalStatistics}
-                    statsPerCompetition={statistics}
-                ></Statistics>
+                        <Statistics
+                            periodSelection={periodSelection}
+                            globalStatistics={globalStatistics}
+                            statsPerCompetition={statistics}
+                        ></Statistics>
+                    </>
+                )}
             </div>
         </main>
     );

@@ -18,7 +18,8 @@ export default function PlayerSelection({players, selectedPlayer, onSelectedPlay
     const [newPlayerPDGANumber, setNewPlayerPDGANumber] = useState("");
 
     function selectPlayer(PDGANum: number) {
-        onSelectedPlayer(players.find(x => x.pdgaNumber === PDGANum))
+        onSelectedPlayer(players.find(x => x.pdgaNumber === PDGANum));
+        localStorage.setItem("selectedPlayer", PDGANum.toString());
     }
 
     async function handleAddPlayer() {
