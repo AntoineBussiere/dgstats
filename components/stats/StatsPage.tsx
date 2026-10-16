@@ -36,8 +36,10 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
         if (savedPdgaNumber) {
             setSelectedPlayer(initialPlayers.find(x => x.pdgaNumber === Number(savedPdgaNumber)));
         } else {
-            setSelectedPlayer(initialPlayers[0]);
-            localStorage.setItem("selectedPlayer", initialPlayers[0].pdgaNumber.toString());
+            if (initialPlayers.length > 0) {
+                setSelectedPlayer(initialPlayers[0]);
+                localStorage.setItem("selectedPlayer", initialPlayers[0].pdgaNumber.toString());
+            }
         }
     }, [initialPlayers]);
 
@@ -104,46 +106,45 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                         Analysez les performances de vos joueurs.
                     </p>
                 </header>
+                    <PlayerSelection
+                        players={players}
+                        selectedPlayer={selectedPlayer}
+                        onSelectedPlayer={(player: Player) => setSelectedPlayer(player)}
+                        onAddPlayer={(newPlayer: Player) => {
+                            setPlayers((current) => [
+                                ...current,
+                                newPlayer
+                            ]);
+                            setSelectedPlayer(newPlayer);
+                        }}
+                    ></PlayerSelection>
 
-                {selectedPlayer && (
-                    <>
-                        <PlayerSelection
-                            players={players}
-                            selectedPlayer={selectedPlayer}
-                            onSelectedPlayer={(player: Player) => setSelectedPlayer(player)}
-                            onAddPlayer={(newPlayer: Player) => {
-                                setPlayers((current) => [
-                                    ...current,
-                                    newPlayer
-                                ]);
-                                setSelectedPlayer(newPlayer);
-                            }}
-                        ></PlayerSelection>
+                    {selectedPlayer && (
+                        <>
+                            <Competitions
+                                PDGA_Number={selectedPlayer.pdgaNumber}
+                                competitions={selectedPlayer.competitions}
+                                onAddCompetition={addCompetitions}
+                                onDeleteCompetition={deleteCompetition}
+                            ></Competitions>
 
-                        <Competitions
-                            PDGA_Number={selectedPlayer.pdgaNumber}
-                            competitions={selectedPlayer.competitions}
-                            onAddCompetition={addCompetitions}
-                            onDeleteCompetition={deleteCompetition}
-                        ></Competitions>
+                            <Period
+                                availableYears={availableYears}
+                                competitions={selectedPlayer.competitions}
+                                selectedPlayer={selectedPlayer}
+                                selectedPeriod={periodSelection}
+                                onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
+                            ></Period>
 
-                        <Period
-                            availableYears={availableYears}
-                            competitions={selectedPlayer.competitions}
-                            selectedPlayer={selectedPlayer}
-                            selectedPeriod={periodSelection}
-                            onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
-                        ></Period>
-
-                        {selectedPlayer.competitions.length > 0 && (
-                            <Statistics
-                                periodSelection={periodSelection}
-                                globalStatistics={globalStatistics}
-                                statsPerCompetition={selectedPlayer.competitions}
-                            ></Statistics>
-                        )}
-                    </>
-                )}
+                            {selectedPlayer.competitions.length > 0 && (
+                                <Statistics
+                                    periodSelection={periodSelection}
+                                    globalStatistics={globalStatistics}
+                                    statsPerCompetition={selectedPlayer.competitions}
+                                ></Statistics>
+                            )}
+                        </>
+                    )}
             </div>
         </main>
     );
