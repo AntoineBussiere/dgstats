@@ -3,31 +3,31 @@
 import { useEffect, useMemo, useState } from "react";
 import { Player } from "../../types/player";
 import PlayerSelection from "./PlayerSelection";
-import { CompetitionData } from "../../types/competition";
 import Competitions from "./Competitions";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import Period from "./Period";
 import Statistics from "./Statistics";
 import { setDBPlayers } from "../../lib/player";
-import { getStats } from "../../lib/stats/getStats";
 import { CompetitionStats } from "../../types/stats";
-import { morgStats, stats } from "../../mock/stats-mock";
 import { aggregateGlobalStats } from "../../lib/stats/utils";
 
 export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
     const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const [selectedPlayer, setSelectedPlayer] = useState<Player>();
-    const [statistics, setStatistics] = useState<CompetitionStats[]>([]);
 
     const availableYears = [
-        ...new Set(selectedPlayer?.competitions?.map((competition) => (new Date(competition.date)).getFullYear())),
+        ...new Set(selectedPlayer?.competitions?.map((competition) => (new Date(competition.competitionDate)).getFullYear())),
     ].sort((a, b) => b - a);
     
 
     const globalStatistics = useMemo(
-        () => aggregateGlobalStats(statistics),
-        [statistics]
+        () => {
+            if (selectedPlayer?.competitions){
+                return aggregateGlobalStats(selectedPlayer.competitions)
+            }
+        },
+        [selectedPlayer?.competitions]
     );
 
     useEffect(() => {
@@ -41,26 +41,12 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
         }
     }, [initialPlayers]);
 
-    useEffect(() => {
-        if (!selectedPlayer) {
-            return;
-        }
-
-        async function loadStats() {
-            // const stats = await getStats(selectedPlayer.pdgaNumber, selectedPlayer.competitions);
-            setStatistics(stats);
-            console.log(stats);
-        }
-
-        loadStats();
-    }, [selectedPlayer?.pdgaNumber]);
-
-    async function addCompetition(newCompetition: CompetitionData) {
+    async function addCompetitions(newCompetition: CompetitionStats[]) {
         const updatedPlayers = players.map((player) =>
             player.pdgaNumber === selectedPlayer.pdgaNumber
                 ? {
                     ...player,
-                    competitions: [...player.competitions, newCompetition]
+                    competitions: [...player.competitions, ...newCompetition]
                 }
                 : player
         );
@@ -69,7 +55,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
         setSelectedPlayer((currentPlayer) => {
             return {
                 ...currentPlayer,
-                competitions: [...currentPlayer.competitions, newCompetition]
+                competitions: [...currentPlayer.competitions, ...newCompetition]
             }
         });
 
@@ -135,8 +121,9 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                         ></PlayerSelection>
 
                         <Competitions
+                            PDGA_Number={selectedPlayer.pdgaNumber}
                             competitions={selectedPlayer.competitions}
-                            onAddCompetition={addCompetition}
+                            onAddCompetition={addCompetitions}
                             onDeleteCompetition={deleteCompetition}
                         ></Competitions>
 
@@ -148,11 +135,13 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                             onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
                         ></Period>
 
-                        <Statistics
-                            periodSelection={periodSelection}
-                            globalStatistics={globalStatistics}
-                            statsPerCompetition={statistics}
-                        ></Statistics>
+                        {selectedPlayer.competitions.length > 0 && (
+                            <Statistics
+                                periodSelection={periodSelection}
+                                globalStatistics={globalStatistics}
+                                statsPerCompetition={selectedPlayer.competitions}
+                            ></Statistics>
+                        )}
                     </>
                 )}
             </div>

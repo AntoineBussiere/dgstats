@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { CompetitionData } from "../../types/competition";
-import { getCompetitionData } from "../../lib/stats/api";
+import { CompetitionStats } from "../../types/stats";
+import { getStats } from "../../lib/stats/getStats";
 
 type Props = {
-    competitions: CompetitionData[],
-    onAddCompetition: (competition: CompetitionData) => void
+    PDGA_Number: number,
+    competitions: CompetitionStats[],
+    onAddCompetition: (competitions: CompetitionStats[]) => void
     onDeleteCompetition: (competitionId: number) => void
 }
 
-export default function Competitions({competitions, onAddCompetition, onDeleteCompetition}: Props) {
+export default function Competitions({PDGA_Number, competitions, onAddCompetition, onDeleteCompetition}: Props) {
     const [showAddCompetition, setShowAddCompetition] = useState(false);
     const [newCompetitionUrl, setNewCompetitionUrl] = useState("");
     
@@ -19,29 +20,27 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
             return;
         }
 
-        const splittedUrl = newCompetitionUrl.split('/');
-        const idDivision = splittedUrl[splittedUrl.length - 1].split('#');
-
-        const competitionData = await getCompetitionData(Number(idDivision[0]));
-
-        const newCompetition: CompetitionData = {
-            competitionId: Number(idDivision[0]),
-            name: competitionData.data.SimpleName.replace(/\s*(?:,\s*sponso|- \s*sponso).*$/i, ""),
-            division: idDivision[1],
-            date: competitionData.data.EndDate
-        };
-        console.log(newCompetition);
+        const newCompetitionsPromise: Promise<CompetitionStats>[] = [];
         
-
-        onAddCompetition(newCompetition);
+        for (const newCompetition of newCompetitionUrl.split(';')) {
+            if (newCompetition.trim() && /^https:\/\/www\.pdga\.com\/tour\/event\/\d+#.+$/.test(newCompetition)) {
+                const splittedUrl = newCompetition.split('/');
+                const idDivision = splittedUrl[splittedUrl.length - 1].split('#');
+                
+                newCompetitionsPromise.push(getStats(PDGA_Number, idDivision[1], Number(idDivision[0])));
+            }
+        }
+        const newCompetitions = await Promise.all(newCompetitionsPromise);
+        
+        onAddCompetition(newCompetitions.filter((competition): competition is CompetitionStats => competition !== undefined));
 
         setNewCompetitionUrl("");
         setShowAddCompetition(false);
     }
 
-    function handleDeleteCompetition(competition: CompetitionData) {
+    function handleDeleteCompetition(competition: CompetitionStats) {
         const confirmed = window.confirm(
-            `Supprimer la compétition "${competition.name}" ?`,
+            `Supprimer la compétition "${competition.competitionName}" ?`,
         );
 
         if (confirmed) {
@@ -95,7 +94,7 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                                 value={newCompetitionUrl}
                                 autoComplete="off"
                                 onChange={ (event) => setNewCompetitionUrl(event.target.value) }
-                                placeholder="https://www.pdga.com/tour/event/103484#MA3"
+                                placeholder="https://www.pdga.com/tour/event/123456#MPO"
                                 className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 outline-none focus:border-indigo-500"
                             />
                         </div>
@@ -131,12 +130,12 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
             {competitions?.length > 0 && (
                 <div className="space-y-2">
                     {Object.entries(
-                        competitions.reduce<Record<number, CompetitionData[]>>((groups, competition) => {
-                            if (!groups[(new Date(competition.date)).getFullYear()]) {
-                                groups[(new Date(competition.date)).getFullYear()] = [];
+                        competitions.reduce<Record<number, CompetitionStats[]>>((groups, competition) => {
+                            if (!groups[(new Date(competition.competitionDate)).getFullYear()]) {
+                                groups[(new Date(competition.competitionDate)).getFullYear()] = [];
                             }
 
-                            groups[(new Date(competition.date)).getFullYear()].push(competition);
+                            groups[(new Date(competition.competitionDate)).getFullYear()].push(competition);
 
                             return groups;
                         }, {})
@@ -174,7 +173,7 @@ export default function Competitions({competitions, onAddCompetition, onDeleteCo
                                                 className="min-w-0 flex-1 text-left"
                                             >
                                                 <div className="truncate text-sm text-slate-200">
-                                                    {competition.name}
+                                                    {competition.competitionName}
                                                 </div>
                                             </div>
 

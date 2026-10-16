@@ -1,12 +1,12 @@
 import { ChartTypes } from "./charts";
-import { CompetitionData } from "./competition";
+import { CompetitionStats } from "./stats";
 
 export enum PeriodType {"global", "year", "competition"};
 
 export interface PeriodSelection {
     type: PeriodType;
     year?: number;
-    competition?: CompetitionData;
+    competition?: CompetitionStats;
     compareToGlobal: boolean;
 }
 

@@ -60,6 +60,7 @@ export interface GlobalStats extends CommonStats {
 }
 
 export interface CompetitionStats {
+    competitionId: number;
     competitionName: string;
     competitionDate: string;
     nbPlayers: number;

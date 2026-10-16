@@ -36,7 +36,6 @@ export default function ProgressionChart({ progressionData, compareToGlobal }: P
                         axisLine={false}
                         tick={false}
                     />
-                    {'lol'}
 
                     <YAxis
                         stroke="#64748b"

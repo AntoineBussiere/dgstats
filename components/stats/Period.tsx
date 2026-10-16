@@ -1,11 +1,11 @@
-import { CompetitionData } from "../../types/competition";
 import { PeriodSelection, PeriodType } from "../../types/period";
 import { Player } from "../../types/player";
+import { CompetitionStats } from "../../types/stats";
 
 type Props = {
     selectedPlayer: Player,
     availableYears: number[],
-    competitions: CompetitionData[],
+    competitions: CompetitionStats[],
     selectedPeriod: PeriodSelection,
     onPeriodSelection: (period: PeriodSelection) => void
 }
@@ -136,7 +136,7 @@ export default function Period({selectedPlayer, availableYears, competitions, se
                                         key={competition.competitionId}
                                         value={competition.competitionId}
                                     >
-                                        {competition.name}
+                                        {competition.competitionName}
                                     </option>
                                 ),
                             )}

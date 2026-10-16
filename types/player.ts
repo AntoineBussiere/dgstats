@@ -1,8 +1,8 @@
-import { CompetitionData } from "./competition";
+import { CompetitionStats } from "./stats";
 
 export type Player = {
     firstname: string;
     lastname: string;
     pdgaNumber: number;
-    competitions: CompetitionData[];
+    competitions: CompetitionStats[];
 };

@@ -14,6 +14,7 @@ export interface CompetitionDataDTO {
             Players: number
         }[],
         Rounds: number;
+        TournamentId: string;
     }
 }
 
@@ -31,13 +32,6 @@ export interface Score {
     RoundtoPar: number;
     Tied: boolean;
     RunningPlace: number;
-}
-
-export interface CompetitionData {
-    competitionId: number;
-    division: string;
-    name?: string;
-    date?: string;
 }
 
 export interface RoundResultDTO {

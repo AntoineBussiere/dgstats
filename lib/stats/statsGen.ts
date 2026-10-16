@@ -101,13 +101,13 @@ export async function getRoundStats(competitionId: number, division: string, rou
         x => x.PDGANum === PDGANum
     );
 
-    const competitionResult = await getCompetitionResult(score.ResultID);
-    
-    const roundStat = await getCompetitionRoundStat(competitionResult.playerRounds[round - 1]?.liveScore.scoreId);
-
     if (!score) {
         return null;
     }
+
+    const competitionResult = await getCompetitionResult(score.ResultID);
+    
+    const roundStat = await getCompetitionRoundStat(competitionResult.playerRounds[round - 1]?.liveScore.scoreId);
 
     const stats = await getAPIStats(score.ScoreID);
 
@@ -115,14 +115,11 @@ export async function getRoundStats(competitionId: number, division: string, rou
 }
 
 export async function getCompetitionStats(competitionId: number, division: string, playerId: number, nbRounds: number): Promise<RoundStats[]> {
-    const roundStats: RoundStats[] = [];
+    const results = await Promise.all(
+        Array.from({ length: nbRounds }, (_, i) =>
+            getRoundStats(competitionId, division, i + 1, playerId)
+        )
+    );
 
-    for (let round = 1; round <= nbRounds; round++) {
-        const stats = await getRoundStats(competitionId, division, round, playerId);
-        if (stats) {
-            roundStats.push(stats);
-        }
-    }
-
-    return roundStats;
+    return results.filter((stats): stats is RoundStats => stats !== null && stats !== undefined);
 }

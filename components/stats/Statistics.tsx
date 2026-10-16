@@ -57,7 +57,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                 filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
                 break;
             case PeriodType.competition:
-                filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name);
+                filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.competitionName);
                 break;
         }
         
@@ -89,7 +89,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                     filteredStats = statsPerCompetition.filter(x => (new Date(x.competitionDate)).getFullYear() === periodSelection.year);
                     break;
                 case PeriodType.competition:
-                    filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.name);
+                    filteredStats = statsPerCompetition.filter(x => x.competitionName === periodSelection.competition.competitionName);
                     break;
             }
             return aggregateGlobalStats(filteredStats);
