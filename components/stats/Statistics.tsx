@@ -12,6 +12,7 @@ import { addPlusIfPositive, aggregateGlobalStats, aggregatePerformanceStats, agg
 import ProgressBar from "./Charts/ProgressBar";
 import PerformanceCharts from "./Charts/PerformanceCharts";
 import { isGraphAllowed } from "../../lib/period";
+import InfoTooltip from "../InfoTooltip";
 
 type Props = {
     periodSelection: PeriodSelection,
@@ -304,6 +305,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                                 <ChartHeader
                                     title={ ChartTypes.competitionScore }
                                     description="Statistiques de chaque lancers"
+                                    tooltip={globalStatistics.nbFullStats === 0 ? 'Les statistiques ne sont pas disponibles, car aucune compétition avec des statistiques détaillées n\'a été enregistrée.' : ''}
                                 />
                                 <CompetitionScoreCharts
                                     globalStats={filteredGlobalStats}
@@ -326,6 +328,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                                 <ChartHeader
                                     title={ ChartTypes.shame }
                                     description="Les stats dont vous ne serez pas très fier."
+                                    tooltip={globalStatistics.nbFullStats === 0 ? 'Certaines statistiques ne sont pas disponibles, car aucune compétition avec des statistiques détaillées n\'a été enregistrée.' : ''}
                                 />
                                 <ShameCharts stats={shameStats} nbFullStats={globalStatistics.nbFullStats}></ShameCharts>
                             </div>
@@ -392,11 +395,14 @@ function StatTab({ active, onClick, title, description, icon }: { active: boolea
     );
 }
 
-function ChartHeader({ title, description }: { title: string; description: string }) {
+function ChartHeader({ title, description, tooltip }: { title: string; description: string; tooltip?: string }) {
     return (
         <div>
-            <h2 className="text-xl font-semibold text-slate-100">
+            <h2 className="flex text-xl font-semibold text-slate-100 gap-3">
                 {title}
+                {tooltip && (
+                    <InfoTooltip text={tooltip} />
+                )}
             </h2>
 
             <p className="mt-1 text-sm text-slate-400">

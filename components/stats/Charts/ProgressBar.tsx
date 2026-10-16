@@ -33,7 +33,7 @@ export default function ProgressBar({ data, showPercent = true, height }: Props)
             {showPercent && (
                 <span className="whitespace-nowrap text-sm text-slate-300">
                     {data.map((item) => (
-                        <span className="mr-7" key={item.name}>
+                        <span className="mr-5" key={item.name}>
                             {item.value}/{item.total} {item.name}
                         </span>
                     ))}
