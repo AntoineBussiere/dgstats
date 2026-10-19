@@ -284,7 +284,7 @@ export default function Statistics({ periodSelection, globalStatistics, statsPer
                             <div>
                                 <ChartHeader
                                     title={ ChartTypes.progression }
-                                    description="Évolution de vos scores sur la période sélectionnée."
+                                    description="Évolution de votre rating sur la période sélectionnée."
                                 />
                                 <ProgressionChart compareToGlobal={periodSelection.compareToGlobal} progressionData={progressionData} ></ProgressionChart>
                             </div>

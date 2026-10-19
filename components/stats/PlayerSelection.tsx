@@ -24,7 +24,7 @@ export default function PlayerSelection({players, selectedPlayer, onSelectedPlay
 
     async function handleAddPlayer() {
         const PDGANum = Number(newPlayerPDGANumber);
-        if (!newPlayerFirstname.trim() || !newPlayerLastname.trim() || PDGANum <= 0) {
+        if (!newPlayerFirstname.trim() || !newPlayerLastname.trim() || PDGANum <= 0 || players.find(x => x.pdgaNumber === PDGANum)) {
             return;
         }
 

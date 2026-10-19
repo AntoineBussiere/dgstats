@@ -42,7 +42,6 @@ function genStats(stats: Stats[], scoreData: Score, roundStat: RoundStatDTO[]): 
     let nbHazard = 0;
     let nbMissMando = 0;
     let longestPutt = 0;
-    let nbFullStats = 0;
     
     for (let stat of stats) {
         if (stat.holeBreakdown) {
@@ -51,14 +50,10 @@ function genStats(stats: Stats[], scoreData: Score, roundStat: RoundStatDTO[]): 
             nbMissMando += stat.holeBreakdown.missedMando;
 
             longestPutt = stat.holeBreakdown.throwIn > longestPutt ? stat.holeBreakdown.throwIn : longestPutt;
-
-            nbFullStats++;
         }
     }
 
     longestPutt = Math.round(longestPutt * 0.3048);
-    
-
 
     return {
         fairwaysuccess:roundStat[0].statCount,
@@ -90,7 +85,7 @@ function genStats(stats: Stats[], scoreData: Score, roundStat: RoundStatDTO[]): 
         worstScore,
         tied: scoreData.Tied,
         position: scoreData.RunningPlace,
-        nbFullStats
+        nbFullStats: stats[0].holeBreakdown ? 1 : 0
     }
 }
 

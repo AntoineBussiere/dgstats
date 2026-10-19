@@ -10,6 +10,7 @@ import Statistics from "./Statistics";
 import { setDBPlayers } from "../../lib/player";
 import { CompetitionStats } from "../../types/stats";
 import { aggregateGlobalStats } from "../../lib/stats/utils";
+import { mergeCompetitions } from "../../lib/competition";
 
 export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) {
     const [periodSelection, setPeriodSelection] = useState<PeriodSelection>({type: PeriodType.global, compareToGlobal: false});
@@ -43,12 +44,13 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
         }
     }, [initialPlayers]);
 
-    async function addCompetitions(newCompetition: CompetitionStats[]) {
+    async function addCompetitions(newCompetitions: CompetitionStats[]) {
+        const competitions = mergeCompetitions(selectedPlayer.competitions, newCompetitions);
         const updatedPlayers = players.map((player) =>
             player.pdgaNumber === selectedPlayer.pdgaNumber
                 ? {
                     ...player,
-                    competitions: [...player.competitions, ...newCompetition]
+                    competitions
                 }
                 : player
         );
@@ -57,7 +59,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
         setSelectedPlayer((currentPlayer) => {
             return {
                 ...currentPlayer,
-                competitions: [...currentPlayer.competitions, ...newCompetition]
+                competitions
             }
         });
 
@@ -103,7 +105,7 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                     </h1>
 
                     <p className="mt-2 text-slate-400">
-                        Analysez les performances de vos joueurs.
+                        Analysez vos statistiques de Disc Golf !
                     </p>
                 </header>
                     <PlayerSelection
@@ -122,26 +124,28 @@ export default function StatsPage({initialPlayers}: {initialPlayers: Player[]}) 
                     {selectedPlayer && (
                         <>
                             <Competitions
-                                PDGA_Number={selectedPlayer.pdgaNumber}
+                                selectedPlayer={selectedPlayer}
                                 competitions={selectedPlayer.competitions}
                                 onAddCompetition={addCompetitions}
                                 onDeleteCompetition={deleteCompetition}
                             ></Competitions>
 
-                            <Period
-                                availableYears={availableYears}
-                                competitions={selectedPlayer.competitions}
-                                selectedPlayer={selectedPlayer}
-                                selectedPeriod={periodSelection}
-                                onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
-                            ></Period>
-
                             {selectedPlayer.competitions.length > 0 && (
-                                <Statistics
-                                    periodSelection={periodSelection}
-                                    globalStatistics={globalStatistics}
-                                    statsPerCompetition={selectedPlayer.competitions}
-                                ></Statistics>
+                                <>
+                                    <Period
+                                        availableYears={availableYears}
+                                        competitions={selectedPlayer.competitions}
+                                        selectedPlayer={selectedPlayer}
+                                        selectedPeriod={periodSelection}
+                                        onPeriodSelection={(periodSelection: PeriodSelection) => setPeriodSelection(periodSelection)}
+                                    ></Period>
+
+                                    <Statistics
+                                        periodSelection={periodSelection}
+                                        globalStatistics={globalStatistics}
+                                        statsPerCompetition={selectedPlayer.competitions}
+                                    ></Statistics>
+                                </>
                             )}
                         </>
                     )}

@@ -3,22 +3,26 @@
 import { useState } from "react";
 import { CompetitionStats } from "../../types/stats";
 import { getStats } from "../../lib/stats/getStats";
+import { Player } from "../../types/player";
+import Loader from "../ui/Loader";
 
 type Props = {
-    PDGA_Number: number,
+    selectedPlayer: Player,
     competitions: CompetitionStats[],
     onAddCompetition: (competitions: CompetitionStats[]) => void
     onDeleteCompetition: (competitionId: number) => void
 }
 
-export default function Competitions({PDGA_Number, competitions, onAddCompetition, onDeleteCompetition}: Props) {
+export default function Competitions({selectedPlayer, competitions, onAddCompetition, onDeleteCompetition}: Props) {
     const [showAddCompetition, setShowAddCompetition] = useState(false);
     const [newCompetitionUrl, setNewCompetitionUrl] = useState("");
+    const [loading, setLoading] = useState(false);
     
     async function handleAddCompetition() {
         if (!newCompetitionUrl.trim()) {
             return;
         }
+        setLoading(true);
 
         const newCompetitionsPromise: Promise<CompetitionStats>[] = [];
         
@@ -27,7 +31,9 @@ export default function Competitions({PDGA_Number, competitions, onAddCompetitio
                 const splittedUrl = newCompetition.split('/');
                 const idDivision = splittedUrl[splittedUrl.length - 1].split('#');
                 
-                newCompetitionsPromise.push(getStats(PDGA_Number, idDivision[1], Number(idDivision[0])));
+                if (!selectedPlayer.competitions.map(x => x.competitionId).includes(Number(idDivision[0]))) {
+                    newCompetitionsPromise.push(getStats(selectedPlayer.pdgaNumber, idDivision[1], Number(idDivision[0])));
+                }
             }
         }
         const newCompetitions = await Promise.all(newCompetitionsPromise);
@@ -36,6 +42,7 @@ export default function Competitions({PDGA_Number, competitions, onAddCompetitio
 
         setNewCompetitionUrl("");
         setShowAddCompetition(false);
+        setLoading(false);
     }
 
     function handleDeleteCompetition(competition: CompetitionStats) {
@@ -202,6 +209,7 @@ export default function Competitions({PDGA_Number, competitions, onAddCompetitio
                     </p>
                 </div>
             )}
+            <Loader show={loading} text="Génération des stats..." />
         </section>
     );
 }
