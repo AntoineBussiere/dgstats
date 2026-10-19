@@ -101,8 +101,8 @@ export async function getRoundStats(competitionId: number, division: string, rou
     }
 
     const competitionResult = await getCompetitionResult(score.ResultID);
-    
-    const roundStat = await getCompetitionRoundStat(competitionResult.playerRounds[round - 1]?.liveScore.scoreId);
+
+    const roundStat = await getCompetitionRoundStat(competitionResult.playerRounds[round - 1]?.liveScore?.scoreId);
 
     const stats = await getAPIStats(score.ScoreID);
 
