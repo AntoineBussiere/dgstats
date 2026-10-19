@@ -102,6 +102,10 @@ export async function getRoundStats(competitionId: number, division: string, rou
 
     const competitionResult = await getCompetitionResult(score.ResultID);
 
+    if (!competitionResult.playerRounds[round - 1]?.liveScore) {
+        return null;
+    }
+
     const roundStat = await getCompetitionRoundStat(competitionResult.playerRounds[round - 1]?.liveScore?.scoreId);
 
     const stats = await getAPIStats(score.ScoreID);
